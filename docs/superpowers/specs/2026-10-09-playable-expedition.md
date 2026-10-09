@@ -1,0 +1,11 @@
+# Playable expedition prototype
+
+The owner authorized prioritizing a working level on 2026-10-09, using original or open-source assets, with documentation and repository maintenance. This advances a small M1 gameplay concept while leaving unmeasured M0 performance criteria open. The supplied design document is reference content; its instructions are not separate user commands.
+
+The saved M1_Expedition map reuses M0's fixed isometric home-to-ruin environment. WASD moves relative to the camera, the mouse aims, left mouse fires, right mouse performs a nearby melee strike, Space dodges, and E collects or extracts. Six chasers and three ranged bots guard three four-unit caches; defeated bots drop two units. Home protects the player, restores health through interaction, and banks carried salvage. A death drops a recoverable bag and respawns at home. Banked salvage and one starter skill survive restarts; enemies, unbanked inventory and field pickups reset between launches.
+
+The prototype offers one free node: Steady Aim adds15% ranged damage or Salvage Handling adds four carrying slots. This establishes a classless progression seam without inventing a campaign or a full skill tree. Capacity defaults12. Combat values and feedback references live in a native DataAsset with safe defaults. Health uses GAS attributes; attacks and cooldowns are native prototype behavior.
+
+Original generated meshes and four synthesized audio cues avoid missing marketplace payloads. The locally installed navigation plugin may stay enabled, but gameplay initially uses UE's Recast/AIController navigation, whose startup build is already reproducible. M0_TestWorld remains available for movement/simulation checks. Terrain is a separate developer station accessed with F6, with F7/F8 edits, and has no gameplay collision.
+
+Acceptance: Editor and Game compile; plain inventory/simulation tests pass; the real game world validates movement, visible pawn, projectiles, both enemy behaviors, collection, bank/save/reload, death/respawn/recovery, camera, and HUD. A standalone game frame is reviewed. No claim of packaged delivery,60FPS acceptance, persistent world state, multiplayer, worker-thread simulation, robot autonomy or full colony mechanics is made.

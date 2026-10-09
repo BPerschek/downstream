@@ -1,0 +1,8 @@
+* text=auto
+*.md whitespace=-blank-at-eol
+*.uasset binary
+*.umap binary
+*.blend binary
+*.fbx binary
+*.png binary
+*.wav binary

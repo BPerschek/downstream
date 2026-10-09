@@ -1,0 +1,15 @@
+.tools/
+art/exports/*.fbm/
+art/*.blend1
+art/*.log
+build/
+unreal/**/Binaries/
+unreal/**/DerivedDataCache/
+unreal/**/Intermediate/
+unreal/**/Saved/
+unreal/Downstream/Source/
+.vs/
+*.sln
+*.suo
+*.VC.db
+__pycache__/

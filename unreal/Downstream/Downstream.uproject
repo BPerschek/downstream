@@ -1,0 +1,67 @@
+﻿{
+    "FileVersion":  3,
+    "EngineAssociation":  "{37CE65AB-49F7-8464-0DAB-DCA269588518}",
+    "Category":  "",
+    "Description":  "",
+    "Plugins":  [
+                    {
+                        "Name":  "ModelingToolsEditorMode",
+                        "Enabled":  true,
+                        "TargetAllowList":  [
+                                                "Editor"
+                                            ]
+                    },
+                    {
+                        "Name":  "PythonScriptPlugin",
+                        "Enabled":  true,
+                        "TargetAllowList":  [
+                                                "Editor"
+                                            ]
+                    },
+                    {
+                        "Name":  "EditorScriptingUtilities",
+                        "Enabled":  true,
+                        "TargetAllowList":  [
+                                                "Editor"
+                                            ]
+                    },
+                    {
+                        "Name":  "GameplayStateTree",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "ProceduralMeshComponent",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "AdaptivePathfindingSystem",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "GameplayAbilities",
+                        "Enabled":  true
+                    }
+                ],
+    "Modules":  [
+                    {
+                        "Name":  "Downstream",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "Default"
+                    },
+                    {
+                        "Name":  "DownstreamSim",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "PreDefault"
+                    },
+                    {
+                        "Name":  "DownstreamCombat",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "Default"
+                    },
+                    {
+                        "Name":  "DownstreamRender",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "Default"
+                    }
+                ]
+}

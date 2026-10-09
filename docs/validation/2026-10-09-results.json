@@ -1,0 +1,132 @@
+{
+  "expedition": {
+    "pawn_class": "DownstreamPlayerCharacter",
+    "enemies": 9,
+    "chasers": 6,
+    "shooters": 3,
+    "camera": {
+      "pitch": -55,
+      "yaw": 45,
+      "roll": 0
+    },
+    "hud": "DownstreamDebugHUD",
+    "movement_cm": 432.61020651954254,
+    "first_projectile_damage": 28.75,
+    "projectile_kill": true,
+    "enemy_drop": true,
+    "banked_salvage": 2,
+    "starter_skill": "steady_aim",
+    "point_blank_projectile_damage": 28.75,
+    "melee_damage": 36.25,
+    "chaser_moved_cm": 416.3110200478166,
+    "chaser_damage": 12.0,
+    "shooter_damage": 10.0,
+    "home_protection": true,
+    "home_heal": true,
+    "death_respawn": true,
+    "recovery_bag": true,
+    "recovered_salvage": 2,
+    "dodge_cm": 290.32464586425544,
+    "dodge_protection": true,
+    "dodge_cooldown": true,
+    "passed": true,
+    "message": "Movement, ranged/melee, both enemy AI, extraction, home, death/recovery, dodge and save passed",
+    "stage": "dodge"
+  },
+  "reload": {
+    "pawn_class": "DownstreamPlayerCharacter",
+    "enemies": 9,
+    "chasers": 6,
+    "shooters": 3,
+    "camera": {
+      "pitch": -55,
+      "yaw": 45,
+      "roll": 0
+    },
+    "hud": "DownstreamDebugHUD",
+    "banked": 2,
+    "skill": "steady_aim",
+    "field_reset": true,
+    "passed": true,
+    "message": "Save reload and field reset passed",
+    "stage": "spawn"
+  },
+  "terrain": {
+    "pawn_class": "BP_TopDownCharacter_C",
+    "player_mesh": "SKM_Manny_Simple",
+    "native_grid": [
+      256,
+      256
+    ],
+    "start": [
+      -1450.0,
+      -850.0,
+      101.15000009536743
+    ],
+    "nav_data_count": 1,
+    "nav_mesh_settings": [
+      {
+        "runtime_generation": "<RuntimeGenerationType.DYNAMIC: 2>",
+        "can_be_main_nav_data": true
+      }
+    ],
+    "startup_navigation_command": "RebuildNavigation",
+    "path_points": 2,
+    "travel_cm": 452.61645867218135,
+    "camera_rotation": {
+      "pitch": -55,
+      "yaw": 45,
+      "roll": 0
+    },
+    "native_tick_delta": 19,
+    "native_game_seconds": 1.866854701191187,
+    "native_hz_measured": 10.177546216037403,
+    "deferred_edit_passed": true,
+    "idle_rebuilds": 2,
+    "area_edit_passed": true,
+    "final_rebuilds": 3,
+    "native_hud": "DownstreamDebugHUD",
+    "screenshot_exists": true,
+    "passed": true,
+    "message": "Movement, native fixed tick, queued edits, dirty mesh and HUD passed"
+  },
+  "native_automation": {
+    "succeeded": 8,
+    "failed": 0,
+    "tests": [
+      "Downstream.Combat.CooldownBoundary",
+      "Downstream.Combat.FactionAndProtection",
+      "Downstream.Simulation.TerrainCommands.Clamp",
+      "Downstream.Simulation.TerrainCommands.FifoAtTick",
+      "Downstream.Simulation.TerrainCommands.Validation",
+      "Downstream.Simulation.DirtyChunksOnly",
+      "Downstream.Simulation.FixedTickPartitions",
+      "Downstream.Simulation.SeedReproduction"
+    ]
+  },
+  "build": {
+    "editor": "Succeeded",
+    "game": "Succeeded",
+    "engine": "5.8.3",
+    "msvc": "14.44.35229",
+    "sdk": "10.0.26100.0"
+  },
+  "standalone_tests": {
+    "simulation": "17/17 passed",
+    "expedition": "capacity,banking,death,skills,load validation,overflow passed",
+    "compiler": "strict C++17 Zig local test compiler"
+  },
+  "canonical_source_sha256": "16dbb546484f63f81e0e594db60f05c5e9a80cad3149b1624097ca13f7deec87",
+  "recorded_utc": "2026-10-09T22:30:56.198499+00:00",
+  "limits": "Development Editor/game-world validation only; no packaged GPU performance, Mass comparison or persistent world acceptance.",
+  "standalone_frame": {
+    "path": "docs/images/Downstream_Playable_Concept.png",
+    "size": [
+      1280,
+      720
+    ],
+    "reviewed": true,
+    "map": "M1_Expedition",
+    "mode": "UnrealEditor -game with native DownstreamGameMode"
+  }
+}

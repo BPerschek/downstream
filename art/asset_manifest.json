@@ -1,0 +1,524 @@
+{
+  "project": "DOWNSTREAM",
+  "generator": "art/create_blockouts.py",
+  "blender_version": "5.2.2 LTS",
+  "source_units": "metres",
+  "unit_scale_length": 1.0,
+  "authoring_front_axis": "-Y",
+  "pivot": "ground level at local origin",
+  "unreal_import": {
+    "import_uniform_scale": 1.0,
+    "convert_scene": true,
+    "convert_scene_unit": true,
+    "combine_meshes": true,
+    "expected_unit": "centimetres",
+    "collision": "generate simple collision on import"
+  },
+  "palette": {
+    "M_SandConcrete": {
+      "rgba": [
+        0.53,
+        0.38,
+        0.23,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0
+    },
+    "M_LightSand": {
+      "rgba": [
+        0.78,
+        0.64,
+        0.43,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0
+    },
+    "M_DarkSteel": {
+      "rgba": [
+        0.075,
+        0.105,
+        0.12,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0.32
+    },
+    "M_Rust": {
+      "rgba": [
+        0.55,
+        0.18,
+        0.065,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0.32
+    },
+    "M_Teal": {
+      "rgba": [
+        0.04,
+        0.48,
+        0.43,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0.32
+    },
+    "M_Rubber": {
+      "rgba": [
+        0.025,
+        0.03,
+        0.025,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0
+    },
+    "M_DryWood": {
+      "rgba": [
+        0.24,
+        0.16,
+        0.095,
+        1.0
+      ],
+      "roughness": 0.86,
+      "metallic": 0
+    }
+  },
+  "export_settings": {
+    "use_selection": true,
+    "object_types": [
+      "MESH"
+    ],
+    "global_scale": 1.0,
+    "apply_unit_scale": true,
+    "apply_scale_options": "FBX_SCALE_UNITS",
+    "axis_forward": "-Y",
+    "axis_up": "Z",
+    "use_space_transform": true,
+    "bake_space_transform": false,
+    "use_mesh_modifiers": true,
+    "mesh_smooth_type": "FACE",
+    "use_tspace": false,
+    "add_leaf_bones": false,
+    "bake_anim": false,
+    "path_mode": "AUTO"
+  },
+  "assets": [
+    {
+      "name": "SM_Shelter",
+      "fbx": "exports/SM_Shelter.fbx",
+      "dimensions_m": [
+        4.42,
+        3.465001,
+        2.8075
+      ],
+      "expected_dimensions_cm": [
+        442.0,
+        346.5001,
+        280.75
+      ],
+      "vertices": 352,
+      "triangles": 584,
+      "material_slots": [
+        "M_SandConcrete",
+        "M_LightSand",
+        "M_DarkSteel",
+        "M_DryWood",
+        "M_Rust",
+        "M_Teal"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.53,
+          0.38,
+          0.23,
+          1.0
+        ],
+        [
+          0.78,
+          0.64,
+          0.43,
+          1.0
+        ],
+        [
+          0.075,
+          0.105,
+          0.12,
+          1.0
+        ],
+        [
+          0.24,
+          0.16,
+          0.095,
+          1.0
+        ],
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ],
+        [
+          0.04,
+          0.48,
+          0.43,
+          1.0
+        ]
+      ],
+      "details": "4 x 3 m hollow shell; 0.86 m entrance; open hinged door; single sloped sheet-metal roof with four raised repair patches, seams, rivets and teal home marker."
+    },
+    {
+      "name": "SM_SalvageBot",
+      "fbx": "exports/SM_SalvageBot.fbx",
+      "dimensions_m": [
+        1.040458,
+        0.618471,
+        1.16
+      ],
+      "expected_dimensions_cm": [
+        104.0458,
+        61.8471,
+        116.0
+      ],
+      "vertices": 436,
+      "triangles": 764,
+      "material_slots": [
+        "M_DarkSteel",
+        "M_Rust",
+        "M_LightSand",
+        "M_Teal"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.075,
+          0.105,
+          0.12,
+          1.0
+        ],
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ],
+        [
+          0.78,
+          0.64,
+          0.43,
+          1.0
+        ],
+        [
+          0.04,
+          0.48,
+          0.43,
+          1.0
+        ]
+      ],
+      "details": "1.16 m salvage robot; sand armor, rust repairs, teal sensor visor and battery stripe; two articulated block legs and mechanical claw arms. Static concept mesh, no rig."
+    },
+    {
+      "name": "SM_Crate",
+      "fbx": "exports/SM_Crate.fbx",
+      "dimensions_m": [
+        0.9,
+        0.895,
+        0.92
+      ],
+      "expected_dimensions_cm": [
+        90.0,
+        89.5,
+        92.0
+      ],
+      "vertices": 168,
+      "triangles": 300,
+      "material_slots": [
+        "M_LightSand",
+        "M_DarkSteel",
+        "M_Rust",
+        "M_Teal"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.78,
+          0.64,
+          0.43,
+          1.0
+        ],
+        [
+          0.075,
+          0.105,
+          0.12,
+          1.0
+        ],
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ],
+        [
+          0.04,
+          0.48,
+          0.43,
+          1.0
+        ]
+      ],
+      "details": "0.9 m reinforced salvage crate with steel bindings, rust lid rails and teal shipping marker."
+    },
+    {
+      "name": "SM_BrokenWall",
+      "fbx": "exports/SM_BrokenWall.fbx",
+      "dimensions_m": [
+        3.08,
+        0.943174,
+        2.186591
+      ],
+      "expected_dimensions_cm": [
+        308.0,
+        94.3174,
+        218.6591
+      ],
+      "vertices": 166,
+      "triangles": 292,
+      "material_slots": [
+        "M_SandConcrete",
+        "M_LightSand",
+        "M_Rust"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.53,
+          0.38,
+          0.23,
+          1.0
+        ],
+        [
+          0.78,
+          0.64,
+          0.43,
+          1.0
+        ],
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ]
+      ],
+      "details": "3.08 m industrial concrete wall; stepped chipped silhouette, exposed rust rebar, aggregate face and footing rubble. Maximum height approximately 2.17 m."
+    },
+    {
+      "name": "SM_PowerPole",
+      "fbx": "exports/SM_PowerPole.fbx",
+      "dimensions_m": [
+        1.55,
+        0.422,
+        5.0
+      ],
+      "expected_dimensions_cm": [
+        155.0,
+        42.2,
+        500.0
+      ],
+      "vertices": 244,
+      "triangles": 420,
+      "material_slots": [
+        "M_DryWood",
+        "M_DarkSteel",
+        "M_Rust",
+        "M_Teal",
+        "M_Rubber"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.24,
+          0.16,
+          0.095,
+          1.0
+        ],
+        [
+          0.075,
+          0.105,
+          0.12,
+          1.0
+        ],
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ],
+        [
+          0.04,
+          0.48,
+          0.43,
+          1.0
+        ],
+        [
+          0.025,
+          0.03,
+          0.025,
+          1.0
+        ]
+      ],
+      "details": "5 m dry power pole; tapered octagonal shaft, rust crossarm, teal ceramic insulators, bracing, grounded steel shoe and a short disconnected hanging cable."
+    },
+    {
+      "name": "SM_RockCluster",
+      "fbx": "exports/SM_RockCluster.fbx",
+      "dimensions_m": [
+        1.964322,
+        1.083963,
+        0.911484
+      ],
+      "expected_dimensions_cm": [
+        196.4322,
+        108.3963,
+        91.1484
+      ],
+      "vertices": 36,
+      "triangles": 60,
+      "material_slots": [
+        "M_SandConcrete",
+        "M_LightSand"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.53,
+          0.38,
+          0.23,
+          1.0
+        ],
+        [
+          0.78,
+          0.64,
+          0.43,
+          1.0
+        ]
+      ],
+      "details": "Three ground-contact faceted sandstone rocks; deterministic vertex offsets, flat shading, no subdivision modifier."
+    },
+    {
+      "name": "SM_Drum",
+      "fbx": "exports/SM_Drum.fbx",
+      "dimensions_m": [
+        0.648,
+        0.648,
+        0.972
+      ],
+      "expected_dimensions_cm": [
+        64.8,
+        64.8,
+        97.2
+      ],
+      "vertices": 168,
+      "triangles": 304,
+      "material_slots": [
+        "M_Rust",
+        "M_DarkSteel",
+        "M_LightSand"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ],
+        [
+          0.075,
+          0.105,
+          0.12,
+          1.0
+        ],
+        [
+          0.78,
+          0.64,
+          0.43,
+          1.0
+        ]
+      ],
+      "details": "0.98 m rust drum; low-sided slightly dented shell, four steel rings, top lid and bung, pale marking. No textures."
+    },
+    {
+      "name": "SM_ScrapStack",
+      "fbx": "exports/SM_ScrapStack.fbx",
+      "dimensions_m": [
+        1.91121,
+        1.089013,
+        0.62
+      ],
+      "expected_dimensions_cm": [
+        191.121,
+        108.9013,
+        62.0
+      ],
+      "vertices": 312,
+      "triangles": 560,
+      "material_slots": [
+        "M_DarkSteel",
+        "M_Rust",
+        "M_Teal"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.075,
+          0.105,
+          0.12,
+          1.0
+        ],
+        [
+          0.55,
+          0.18,
+          0.065,
+          1.0
+        ],
+        [
+          0.04,
+          0.48,
+          0.43,
+          1.0
+        ]
+      ],
+      "details": "Bound stack of four angular steel I-beam offcuts, rust pipe and discarded teal technology panel; approximately 1.8 m long."
+    },
+    {
+      "name": "SM_AngularTree",
+      "fbx": "exports/SM_AngularTree.fbx",
+      "dimensions_m": [
+        1.609334,
+        0.959849,
+        2.774069
+      ],
+      "expected_dimensions_cm": [
+        160.9334,
+        95.9849,
+        277.4069
+      ],
+      "vertices": 92,
+      "triangles": 140,
+      "material_slots": [
+        "M_DryWood",
+        "M_SandConcrete"
+      ],
+      "material_slot_colors_rgba": [
+        [
+          0.24,
+          0.16,
+          0.095,
+          1.0
+        ],
+        [
+          0.53,
+          0.38,
+          0.23,
+          1.0
+        ]
+      ],
+      "details": "2.8 m bare angular desert tree with branching dry wood silhouette and sandstone at roots. No alpha cards, leaves, collision tricks or wind animation."
+    }
+  ],
+  "license": "Original project-authored geometry, generated locally; no third-party assets."
+}

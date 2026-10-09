@@ -1,0 +1,183 @@
+{
+  "blender_version": "5.2.2 LTS",
+  "assets": [
+    {
+      "name": "SM_Shelter",
+      "dimensions_m": [
+        4.42,
+        3.465001,
+        2.8075
+      ],
+      "scale_error_m": 1.32e-07,
+      "material_slots": [
+        "M_SandConcrete",
+        "M_LightSand",
+        "M_DarkSteel",
+        "M_DryWood",
+        "M_Rust",
+        "M_Teal"
+      ],
+      "triangles": 584,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_SalvageBot",
+      "dimensions_m": [
+        1.040458,
+        0.618471,
+        1.16
+      ],
+      "scale_error_m": 4.41e-07,
+      "material_slots": [
+        "M_DarkSteel",
+        "M_Rust",
+        "M_LightSand",
+        "M_Teal"
+      ],
+      "triangles": 764,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_Crate",
+      "dimensions_m": [
+        0.9,
+        0.895,
+        0.92
+      ],
+      "scale_error_m": 4.3e-08,
+      "material_slots": [
+        "M_LightSand",
+        "M_DarkSteel",
+        "M_Rust",
+        "M_Teal"
+      ],
+      "triangles": 300,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_BrokenWall",
+      "dimensions_m": [
+        3.08,
+        0.943174,
+        2.186591
+      ],
+      "scale_error_m": 3.62e-07,
+      "material_slots": [
+        "M_SandConcrete",
+        "M_LightSand",
+        "M_Rust"
+      ],
+      "triangles": 292,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_PowerPole",
+      "dimensions_m": [
+        1.55,
+        0.422,
+        5.0
+      ],
+      "scale_error_m": 4.8e-08,
+      "material_slots": [
+        "M_DryWood",
+        "M_DarkSteel",
+        "M_Rust",
+        "M_Teal",
+        "M_Rubber"
+      ],
+      "triangles": 420,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_RockCluster",
+      "dimensions_m": [
+        1.964322,
+        1.083963,
+        0.911484
+      ],
+      "scale_error_m": 3.55e-07,
+      "material_slots": [
+        "M_SandConcrete",
+        "M_LightSand"
+      ],
+      "triangles": 60,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_Drum",
+      "dimensions_m": [
+        0.648,
+        0.648,
+        0.972
+      ],
+      "scale_error_m": 3e-09,
+      "material_slots": [
+        "M_Rust",
+        "M_DarkSteel",
+        "M_LightSand"
+      ],
+      "triangles": 304,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_ScrapStack",
+      "dimensions_m": [
+        1.91121,
+        1.089013,
+        0.62
+      ],
+      "scale_error_m": 2.19e-07,
+      "material_slots": [
+        "M_DarkSteel",
+        "M_Rust",
+        "M_Teal"
+      ],
+      "triangles": 560,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    },
+    {
+      "name": "SM_AngularTree",
+      "dimensions_m": [
+        1.609334,
+        0.959849,
+        2.774069
+      ],
+      "scale_error_m": 3.58e-07,
+      "material_slots": [
+        "M_DryWood",
+        "M_SandConcrete"
+      ],
+      "triangles": 140,
+      "single_mesh": true,
+      "fbx_version": 7400,
+      "fbx_unit_scale_factor_cm": 100.0,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "total_triangles": 3424
+}
