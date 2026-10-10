@@ -86,6 +86,24 @@ def tick(delta):
                 assert save_file.read_bytes() == initial_bytes, 'Rejected canal rewrote save'
                 finish(True, 'Schema1 loads into an untouched flooded site; planning requires a digger')
                 return
+            if mode == 'respawn':
+                gm = unreal.GameplayStatics.get_game_mode(world)
+                assert gm.is_field_respawn_enabled(), 'Field respawn disabled'
+                assert gm.get_tracked_enemy_count() == 9 and gm.get_tracked_cache_count() == 3, 'Field not registered (%d/%d)' % (gm.get_tracked_enemy_count(), gm.get_tracked_cache_count())
+                tuning = unreal.load_asset('/Game/Downstream/Data/DA_PrototypeTuning')
+                tuning.set_editor_property('enemy_respawn_seconds', 2.0)
+                tuning.set_editor_property('cache_respawn_seconds', 2.0)
+                # The farthest enemy from home, so it is outside the no-respawn radius around the player.
+                victim = max(unreal.GameplayStatics.get_all_actors_of_class(world, unreal.DownstreamEnemy), key=lambda e: (e.get_actor_location() - home).length())
+                victim.receive_combat_damage(5000, pawn)
+                assert victim.is_dead(), 'Enemy did not die'
+                cache = [p for p in unreal.GameplayStatics.get_all_actors_of_class(world, unreal.DownstreamSalvagePickup) if p.get_editor_property('amount') == 4][0]
+                place(pawn, cache.get_actor_location() + unreal.Vector(0, 0, 60))
+                assert economy.try_interact(pawn), 'Cache collection failed'
+                place(pawn, home)
+                state['respawns_before'] = gm.get_field_respawn_count()
+                stage('respawn_wait')
+                return
             if mode == 'reload':
                 assert initial['version'] == 3 and initial['earthworks']['vault_opened'], 'Reload fixture lacks earthworks'
                 assert economy.is_digger_built() and economy.is_vault_opened(), 'Earthworks flags not restored'
@@ -135,6 +153,14 @@ def tick(delta):
                 assert elapsed < 10, 'Digger did not spawn'
                 return
             state['digger'] = digger
+            assert abs(water.get_canal_depth() - 1.0) < 1e-4, 'Default canal depth should be 1 m'
+            pawn.toggle_dig_planner()
+            assert pawn.is_dig_planner_open(), 'Planner did not open with a digger'
+            pawn.deepen_canals()
+            assert abs(water.get_canal_depth() - 1.25) < 1e-4, 'Shift+wheel up did not deepen'
+            pawn.shallow_canals()
+            assert abs(water.get_canal_depth() - 1.0) < 1e-4, 'Shift+wheel down did not restore depth'
+            pawn.toggle_dig_planner()
             assert not pawn.plan_canal(unreal.IntPoint(-3, 0), CULVERT), 'Off-site canal accepted'
             assert pawn.plan_canal(VAULT, CULVERT), 'Valid canal rejected'
             assert water.get_queued_canal_count() == 1
@@ -173,6 +199,20 @@ def tick(delta):
             assert saved['earthworks']['vault_opened'] and len(saved['earthworks']['terrain_mm']) > 0, 'Earthworks not saved'
             state['report'].update(vault_reward=reward, saved_terrain_cells=len(saved['earthworks']['terrain_mm']))
             finish(True, 'Flooded vault, wading slowdown, digger assembly, real robot canal, drain, vault reward and v3 save passed')
+        elif state['stage'] == 'respawn_wait':
+            gm = unreal.GameplayStatics.get_game_mode(world)
+            living = [e for e in unreal.GameplayStatics.get_all_actors_of_class(world, unreal.DownstreamEnemy) if not e.is_dead()]
+            caches = [p for p in unreal.GameplayStatics.get_all_actors_of_class(world, unreal.DownstreamSalvagePickup) if p.get_editor_property('amount') == 4 and not p.get_editor_property('recovery_bag')]
+            if gm.get_field_respawn_count() - state['respawns_before'] >= 2 and len(living) == 9 and len(caches) >= 3:
+                victim = living[0]
+                victim.receive_combat_damage(5000, pawn)
+                before = gm.get_field_respawn_count()
+                spawned = gm.respawn_field_now()
+                assert spawned >= 1 and gm.get_field_respawn_count() > before, 'F10 respawn did not respawn the fresh kill'
+                state['report'].update(timed_respawns=2, manual_respawns=spawned, living_enemies=9, caches=len(caches))
+                finish(True, 'Killed enemy and looted cache respawned away from the player; manual field respawn works')
+            elif elapsed > 20:
+                raise AssertionError('Respawn stalled: respawns=%d living=%d caches=%d' % (gm.get_field_respawn_count(), len(living), len(caches)))
         elif state['stage'] == 'reload_digger':
             if manager.get_digger():
                 finish(True, 'Schema3 earthworks restored: digger, opened vault and drained canal persist')

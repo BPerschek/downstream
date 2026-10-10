@@ -10,7 +10,7 @@ reports = {}
 def clean(value):
     # Drop transient editor memory addresses from Python struct reprs.
     return json.loads(re.sub(r"\(0x[0-9A-Fa-f]+\) ", '', json.dumps(value)))
-for prefix, modes in [('water', ['legacy', 'flow', 'reload']), ('settlement', ['flow', 'reload', 'unfunded', 'invalid', 'write_failure'])]:
+for prefix, modes in [('water', ['legacy', 'flow', 'reload', 'respawn']), ('settlement', ['flow', 'reload', 'unfunded', 'invalid', 'write_failure'])]:
     for mode in modes:
         value = json.loads((root / 'build' / f'{prefix}-{mode}-verification.json').read_text(encoding='utf-8-sig'))
         if not value.get('passed'):
@@ -21,7 +21,7 @@ for name in ['expedition-play-verification.json', 'expedition-reload-verificatio
     if not value.get('passed'):
         raise RuntimeError(name + ' has not passed')
     reports[name.replace('-verification.json', '').replace('-', '_')] = {'passed': True, 'message': value['message']}
-reports['standalone_tests'] = {'simulation': '17/17', 'expedition': 'passed', 'settlement': 'passed', 'water': '15/15 including the full Drowned Vault puzzle', 'native_automation': '8/8'}
+reports['standalone_tests'] = {'simulation': '17/17', 'expedition': 'passed', 'settlement': 'passed', 'water': '16/16 including the full Drowned Vault puzzle and canal depth', 'native_automation': '8/8'}
 source_hash = hashlib.sha256()
 for path in sorted((root / 'native' / 'Source').rglob('*')):
     if path.is_file():

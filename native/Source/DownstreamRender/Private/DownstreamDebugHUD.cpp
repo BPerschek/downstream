@@ -158,7 +158,8 @@ void ADownstreamDebugHUD::DrawHUD()
             SiteX + 12.0f, 392.0f, 14.0f, Muted);
         Label(FString::Printf(TEXT("Water %.0f m3 | drained %.0f m3"), Water->GetTotalWater(), Water->GetDrainedVolume()),
             SiteX + 12.0f, 416.0f, 14.0f, Muted);
-        Label(bPlanner ? TEXT("PLANNER: drag LMB | RMB cancel | G close") : TEXT("G dig planner | C clear queue | F9 flow"),
+        Label(bPlanner ? FString::Printf(TEXT("PLANNER: depth %.2f m (Shift+wheel)"), Water->GetCanalDepth())
+            : FString::Printf(TEXT("G dig planner | depth %.2f m | F9 flow"), Water->GetCanalDepth()),
             SiteX + 12.0f, 444.0f, 14.0f, bPlanner ? Salvage : Muted);
         if (Player && Player->GetWaterDepth() > 0.15f)
         {
@@ -215,8 +216,13 @@ void ADownstreamDebugHUD::DrawHUD()
     if (bPlanner)
     {
         Box((Width - 640.0f) * 0.5f, Height - 110.0f, 640.0f, 38.0f, Panel);
-        CenteredLabel(Player->IsDraggingCanal() ? TEXT("Release to queue. Canal is graded from start height to end height.")
-            : TEXT("Drag from the water to where it should drain (try the old culvert)"), Height - 100.0f, 17.0f, Salvage);
+        FString PlannerHint = FString::Printf(TEXT("Drag from the water to where it should drain | depth %.2f m (Shift+wheel)"), Water ? Water->GetCanalDepth() : 0.0f);
+        FIntPoint Cursor;
+        float StartBed = 0.0f, EndBed = 0.0f;
+        if (Player->IsDraggingCanal() && Water && Player->GetCanalCursorCell(Cursor)
+            && Water->GetCanalBedRange(Player->GetCanalDragStart(), Cursor, StartBed, EndBed))
+            PlannerHint = FString::Printf(TEXT("Release to queue | bed %.2f m -> %.2f m | water drains toward the lower end"), StartBed, EndBed);
+        CenteredLabel(PlannerHint, Height - 100.0f, 17.0f, Salvage);
     }
     if (bBuilder)
     {
@@ -239,7 +245,7 @@ void ADownstreamDebugHUD::DrawHUD()
     }
     Box(16.0f, Height - 56.0f, Width - 32.0f, 40.0f, Panel);
     CenteredLabel(bBuilder ? TEXT("WASD move | 1-3 select | 4 hauler | 5 digger | LMB place | RMB cancel | B close")
-                  : bPlanner ? TEXT("WASD move | LMB drag canal | RMB cancel | C clear queue | G close planner | F9 water flow")
+                  : bPlanner ? TEXT("WASD move | LMB drag canal | Shift+wheel depth | RMB cancel | C clear queue | G close | F9 flow")
                   : TEXT("WASD move | Mouse aim | LMB shoot | RMB melee | Space dodge | E interact | B build | J hauling | G dig"),
                   Height - 44.0f, 14.0f, Muted);
 

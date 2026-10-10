@@ -27,7 +27,7 @@ foreach ($mode in @('flow','reload','unfunded','invalid','write_failure')) {
     if (Test-Path -LiteralPath $resultPath) { Remove-Item -LiteralPath $resultPath }
     $script = (Join-Path $PSScriptRoot 'verify_settlement.py').Replace('\','/')
     $log = Join-Path $DownstreamRoot "build\settlement-$mode-verification.log"
-    $process = Start-Process -FilePath $DownstreamEditor -ArgumentList @("`"$DownstreamProject`"","-ExecCmds=`"py $script`"","-DownstreamSaveDir=`"$saveDirectory`"","-DownstreamSettlementMode=$mode",'-unattended','-nop4','-nosplash','-windowed','-ResX=1280','-ResY=720','-NoSound',"-abslog=`"$log`"") -WindowStyle Hidden -PassThru
+    $process = Start-Process -FilePath $DownstreamEditor -ArgumentList @("`"$DownstreamProject`"","-ExecCmds=`"py $script`"","-DownstreamSaveDir=`"$saveDirectory`"","-DownstreamSettlementMode=$mode",'-DownstreamNoFieldRespawn','-unattended','-nop4','-nosplash','-windowed','-ResX=1280','-ResY=720','-NoSound',"-abslog=`"$log`"") -WindowStyle Hidden -PassThru
     $timer = [Diagnostics.Stopwatch]::StartNew()
     while (!$process.WaitForExit(1000)) {
         if ($timer.Elapsed.TotalSeconds -gt 125) { Stop-Process -Id $process.Id; throw "Settlement test $mode timed out. See $log" }

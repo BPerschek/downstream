@@ -77,6 +77,9 @@ void ADownstreamPlayerCharacter::SetupPlayerInputComponent(UInputComponent* Inpu
     Input->BindAction(TEXT("BuildDigger"), IE_Pressed, this, &ADownstreamPlayerCharacter::ConstructDigger);
     Input->BindAction(TEXT("DigPlanner"), IE_Pressed, this, &ADownstreamPlayerCharacter::ToggleDigPlanner);
     Input->BindAction(TEXT("ClearDigQueue"), IE_Pressed, this, &ADownstreamPlayerCharacter::ClearDigQueue);
+    Input->BindAction(TEXT("DigDepthUp"), IE_Pressed, this, &ADownstreamPlayerCharacter::DeepenCanals);
+    Input->BindAction(TEXT("DigDepthDown"), IE_Pressed, this, &ADownstreamPlayerCharacter::ShallowCanals);
+    Input->BindAction(TEXT("DevRespawnField"), IE_Pressed, this, &ADownstreamPlayerCharacter::RespawnFieldNow);
 }
 
 void ADownstreamPlayerCharacter::Tick(float DeltaSeconds)
@@ -357,7 +360,7 @@ void ADownstreamPlayerCharacter::ToggleDigPlanner()
     bDigPlannerOpen = !bDigPlannerOpen;
     bDraggingCanal = false;
     if (bDigPlannerOpen && Expedition)
-        Expedition->PostStatus(TEXT("Dig planner: drag LMB from the water to where it should drain. RMB cancels, G closes."));
+        Expedition->PostStatus(TEXT("Dig planner: drag LMB from the water to where it should drain. Shift+wheel sets depth, RMB cancels, G closes."));
 }
 
 void ADownstreamPlayerCharacter::ClearDigQueue()
@@ -396,4 +399,26 @@ bool ADownstreamPlayerCharacter::PlanCanal(FIntPoint From, FIntPoint To)
 {
     auto* Water = UDownstreamWaterSubsystem::GetForWorld(this);
     return !IsDead() && Water && Water->DesignateCanal(From, To, this);
+}
+
+void ADownstreamPlayerCharacter::DeepenCanals()
+{
+    if (!bDigPlannerOpen) return;
+    if (auto* Water = UDownstreamWaterSubsystem::GetForWorld(this)) Water->AdjustCanalDepth(1);
+}
+
+void ADownstreamPlayerCharacter::ShallowCanals()
+{
+    if (!bDigPlannerOpen) return;
+    if (auto* Water = UDownstreamWaterSubsystem::GetForWorld(this)) Water->AdjustCanalDepth(-1);
+}
+
+void ADownstreamPlayerCharacter::RespawnFieldNow()
+{
+    if (auto* GameMode = GetWorld()->GetAuthGameMode<ADownstreamGameMode>())
+    {
+        const int32 Count = GameMode->RespawnFieldNow();
+        if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
+            Expedition->PostStatus(FString::Printf(TEXT("Developer: respawned %d enemies/caches."), Count));
+    }
 }

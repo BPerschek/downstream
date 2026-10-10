@@ -56,6 +56,12 @@ public:
     UFUNCTION(BlueprintPure, Category="Downstream|Water") bool IsCanalValid(FIntPoint From, FIntPoint To) const;
     UFUNCTION(BlueprintCallable, Category="Downstream|Water") bool DesignateCanal(FIntPoint From, FIntPoint To, AActor* Player);
     UFUNCTION(BlueprintCallable, Category="Downstream|Water") void ClearDigQueue();
+    // Depth (m) below the graded line that new canals are cut to.
+    UFUNCTION(BlueprintPure, Category="Downstream|Water") float GetCanalDepth() const;
+    UFUNCTION(BlueprintCallable, Category="Downstream|Water") void SetCanalDepth(float Metres);
+    UFUNCTION(BlueprintCallable, Category="Downstream|Water") void AdjustCanalDepth(int32 Steps);
+    // Bed height (m) a canal would be cut to at its first and last cell with the current depth.
+    UFUNCTION(BlueprintPure, Category="Downstream|Water") bool GetCanalBedRange(FIntPoint From, FIntPoint To, float& StartBed, float& EndBed) const;
     UFUNCTION(BlueprintPure, Category="Downstream|Water") int32 GetQueuedCanalCount() const { return static_cast<int32>(Jobs.size()); }
     UFUNCTION(BlueprintPure, Category="Downstream|Water") TArray<FIntPoint> GetQueuedCanalCells() const;
     UFUNCTION(BlueprintPure, Category="Downstream|Water") float GetActiveCanalProgress() const;
@@ -88,5 +94,6 @@ private:
     double NextDigAction = 0.0;
     bool bTerrainDirty = false;
     bool bFlowOverlay = false;
+    float CanalDepth = -1.0f; // <0: use tuning default
     int32 CompletedCanals = 0;
 };

@@ -291,6 +291,25 @@ int main()
         Require(g.Water(DrownedVaultSite::Vault.X, DrownedVaultSite::Vault.Y) > 1.0f, "unrelated ditch drained vault");
     });
 
+    Run("Drowned Vault: canal depth decides whether a shore start drains the vault", [] {
+        auto dig = [](float depth) {
+            WaterGrid g(DrownedVaultConfig());
+            BuildDrownedVaultSite(g);
+            Seconds(g, 60.0);
+            DigRules rules;
+            rules.MinimumBedDrop = depth;
+            // Starts on the basin slope (0.58 m ground), not at the vault.
+            DigJob job(g, RasterizeCanal({12, 9}, DrownedVaultSite::CulvertB), rules);
+            int actions = 0;
+            while (job.WorkNext(g)) { ++actions; Seconds(g, 0.5); }
+            Seconds(g, 150.0);
+            std::printf("  depth %.2f m: %d actions, vault depth %.3f m\n", depth, actions, g.Water(DrownedVaultSite::Vault.X, DrownedVaultSite::Vault.Y));
+            return g.Water(DrownedVaultSite::Vault.X, DrownedVaultSite::Vault.Y);
+        };
+        Require(dig(0.0f) > DrownedVaultSite::VaultAccessDepth, "grade-only canal from the slope should leave the vault wet");
+        Require(dig(1.0f) < DrownedVaultSite::VaultAccessDepth, "1 m canal from the slope should drain the vault");
+    });
+
     std::cout << Passed << " passed, " << Failures << " failed\n";
     return Failures == 0 ? 0 : 1;
 }

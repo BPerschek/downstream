@@ -23,10 +23,12 @@ powershell -ExecutionPolicy Bypass -File scripts/play.ps1
 | B | At home: open/close the builder. 1-3 select storage/workshop/charger, LMB place, RMB cancel, 4 assemble hauler, 5 assemble digger |
 | J | Enable/pause the hauler's salvage job |
 | G | Dig planner: drag LMB from the water to where it should drain; RMB cancels, G closes |
+| Shift + mouse wheel | In the dig planner: canal depth below grade, 0-3 m in 0.25 m steps (default 1 m) |
 | C | Clear the queued canals |
 | F9 | Water flow/depth developer overlay |
+| F10 | Developer: respawn every dead enemy and looted cache now |
 
-Explore, fight, collect, then return to the green home area and press E. Six chasers and three shooters guard three caches containing four salvage each. Defeated enemies drop two salvage. Base carrying capacity is 12; a pickup must fit in full. Home's 340 cm radius protects the player from damage. Death leaves carried salvage in a recovery bag and respawns the player at home after 1.5 seconds. The HUD shows health, carry, bank, interaction prompts and the starter choice.
+Enemies and the three field caches respawn: a killed enemy returns to its spawn after 60 s and a looted cache refills after 120 s, but only while you are more than 18 m from that spot (tuning: `EnemyRespawnSeconds`, `CacheRespawnSeconds`, `FieldRespawnSafeRadius`). Explore, fight, collect, then return to the green home area and press E. Six chasers and three shooters guard three caches containing four salvage each. Defeated enemies drop two salvage. Base carrying capacity is 12; a pickup must fit in full. Home's 340 cm radius protects the player from damage. Death leaves carried salvage in a recovery bag and respawns the player at home after 1.5 seconds. The HUD shows health, carry, bank, interaction prompts and the starter choice.
 
 Choose one free starter node; the choice and banked salvage persist across launches. Carry, enemies, field pickups and recovery bags reset on a fresh launch. Quitting does not bank carried salvage. The default save is `unreal/Downstream/Saved/Downstream/prototype-save.json`; see [save and test contracts](tests/EXPEDITION_TESTS.md) before modifying it.
 

@@ -262,6 +262,7 @@ bool UDownstreamWaterSubsystem::DesignateCanal(FIntPoint From, FIntPoint To, AAc
     {
         downstream::DigRules Rules;
         Rules.StepDepth = FMath::Max(0.01f, Tuning->DigStepDepth);
+        Rules.MinimumBedDrop = GetCanalDepth();
         downstream::DigJob Job(*Grid, std::move(Path), Rules);
         if (Job.IsComplete(*Grid))
         {
@@ -277,7 +278,36 @@ bool UDownstreamWaterSubsystem::DesignateCanal(FIntPoint From, FIntPoint To, AAc
         return false;
     }
     PlayFeedback(true, Feedback);
-    Expedition->PostStatus(FString::Printf(TEXT("Canal queued: %d cells, graded from start to end. The digger is on its way."), Cells.Num()));
+    Expedition->PostStatus(FString::Printf(TEXT("Canal queued: %d cells, %.2f m below grade. The digger is on its way."), Cells.Num(), GetCanalDepth()));
+    return true;
+}
+
+float UDownstreamWaterSubsystem::GetCanalDepth() const
+{
+    const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
+    const float Max = FMath::Max(0.5f, Tuning->MaxCanalDepth);
+    return FMath::Clamp(CanalDepth < 0.0f ? Tuning->DefaultCanalDepth : CanalDepth, 0.0f, Max);
+}
+
+void UDownstreamWaterSubsystem::SetCanalDepth(float Metres)
+{
+    if (!FMath::IsFinite(Metres)) return;
+    const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
+    CanalDepth = FMath::Clamp(Metres, 0.0f, FMath::Max(0.5f, Tuning->MaxCanalDepth));
+}
+
+void UDownstreamWaterSubsystem::AdjustCanalDepth(int32 Steps)
+{
+    const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
+    SetCanalDepth(GetCanalDepth() + Steps * FMath::Clamp(Tuning->CanalDepthStep, 0.05f, 1.0f));
+}
+
+bool UDownstreamWaterSubsystem::GetCanalBedRange(FIntPoint From, FIntPoint To, float& StartBed, float& EndBed) const
+{
+    if (!IsCellValid(From) || !IsCellValid(To)) return false;
+    const float Floor = Grid->Config().MinimumGround;
+    StartBed = FMath::Max(Floor, Grid->Ground(From.X, From.Y) - GetCanalDepth());
+    EndBed = FMath::Max(Floor, Grid->Ground(To.X, To.Y) - GetCanalDepth());
     return true;
 }
 

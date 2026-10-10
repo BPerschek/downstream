@@ -37,6 +37,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Earthworks") void ConstructDigger();
     UFUNCTION(BlueprintCallable, Category="Earthworks") void ToggleDigPlanner();
     UFUNCTION(BlueprintCallable, Category="Earthworks") void ClearDigQueue();
+    UFUNCTION(BlueprintCallable, Category="Earthworks") void DeepenCanals();
+    UFUNCTION(BlueprintCallable, Category="Earthworks") void ShallowCanals();
+    UFUNCTION(BlueprintCallable, Category="Debug") void RespawnFieldNow();
     UFUNCTION(BlueprintPure, Category="Earthworks") bool IsDigPlannerOpen() const { return bDigPlannerOpen; }
     UFUNCTION(BlueprintPure, Category="Earthworks") bool IsDraggingCanal() const { return bDraggingCanal; }
     UFUNCTION(BlueprintPure, Category="Earthworks") FIntPoint GetCanalDragStart() const { return CanalDragStart; }

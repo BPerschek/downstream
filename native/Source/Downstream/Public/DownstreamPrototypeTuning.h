@@ -38,6 +38,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemies", meta=(ClampMin="1")) float EnemyProjectileSpeed = 1200.0f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemies", meta=(ClampMin="1")) float AggroRange = 1700.0f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Player", meta=(ClampMin="0")) float RespawnDelay = 1.5f;
+    // Field respawn: level-placed enemies and salvage caches return when the player is away.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemies", meta=(ClampMin="1")) float EnemyRespawnSeconds = 60.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemies", meta=(ClampMin="1")) float CacheRespawnSeconds = 120.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemies", meta=(ClampMin="0")) float FieldRespawnSafeRadius = 1800.0f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Expedition", meta=(ClampMin="1")) int32 InventoryCapacity = 12;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Expedition", meta=(ClampMin="1")) float HomeRadius = 340.0f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Expedition") FVector HomeLocation = FVector(-1450.0f, -850.0f, 105.0f);
@@ -66,6 +70,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="1")) float DigReach = 230.0f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="1", ClampMax="3")) int32 MaxQueuedCanals = 3;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="1")) int32 VaultReward = 16;
+    // Canals are cut this far below the straight line between their end heights (Shift+wheel in the planner).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0", ClampMax="3", Units="m")) float DefaultCanalDepth = 1.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0.5", ClampMax="4", Units="m")) float MaxCanalDepth = 3.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0.05", ClampMax="1", Units="m")) float CanalDepthStep = 0.25f;
     // Movement speed multiplier when standing in 1 m of water; deeper water is slower still.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0.05", ClampMax="1")) float WadeSpeedAtOneMetre = 0.45f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks") FVector WaterSiteOrigin = FVector(300.0f, -2600.0f, 0.0f);

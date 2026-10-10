@@ -10,7 +10,7 @@ Six chasers pursue and strike; three shooters pursue into range and fire project
 
 Base capacity is 12. E claims the nearest eligible pickup within 220 cm only when its whole quantity fits. At home, when no eligible pickup takes interaction priority, E banks all carry. Home interaction also restores full health. The 340 cm horizontal home radius protects the player from combat damage; dodging protects during its dodge window. Death creates a recovery bag for carried salvage and respawns at home after 1.5 seconds. The bank survives death.
 
-The level has a finite set of enemies/pickups per fresh launch, with repeatable collection and extraction. There is no win screen, campaign, currency spending or endgame. Recovery bags remain only during the current run. A fresh launch resets carry, enemies and field pickups while restoring bank and selected starter node.
+Level-placed enemies and caches respawn in place (enemies 60 s after death, caches 120 s after looting) while the player is more than 18 m away; ADownstreamGameMode tracks them and `-DownstreamNoFieldRespawn` disables it for scripted verification. F10 respawns everything immediately for testing. There is no win screen, campaign, currency spending or endgame. Recovery bags remain only during the current run. A fresh launch resets carry, enemies and field pickups while restoring bank and selected starter node.
 
 ## Authoritative state and extension seams
 

@@ -11,7 +11,7 @@ The south-east of `M1_Expedition` is a raised plateau with a bowl-shaped basin. 
 3. The digger drives out and cuts the canal one step at a time, piling spoil into a berm on the left of travel. Water follows the new channel to the culvert.
 4. When the water over the vault is 0.35 m or less, **E** opens it: 16 salvage (four pickups of 4) to carry home.
 
-Canals are graded straight from the ground height at the first cell to the height at the last cell. A line that ends on the plateau digs nothing below the plateau, so it does not drain the basin. The designated line is the whole design: start in the water, end lower.
+Canals are graded straight from the ground height at the first cell to the height at the last cell, then cut **canal depth** below that line (default 1 m; Shift + mouse wheel in the planner, 0-3 m in 0.25 m steps; never below the 0 m floor). While dragging, the planner shows the bed height at each end. Depth exists so a canal started on the basin's slope still carries water: from cell (12,9) to the culvert, 0 m depth leaves 0.47 m over the vault, 1 m drains it to 0.20 m (headless test). Deeper canals take more dig steps. A line that ends on the plateau is still graded at plateau height minus the depth, so it does not drain the basin.
 
 Standing water slows everyone the same way (player, enemies, digger): 1 m of water gives 0.45x speed (`WadeSpeedAtOneMetre`), with a floor of 0.25x. The HUD shows a wading banner. F9 toggles the developer flow overlay (depth dots and flow arrows).
 
@@ -58,7 +58,7 @@ Schema 3 adds one object to schema 2. Schemas 1 and 2 load with an untouched sit
 
 ## Tuning (`DA_PrototypeTuning`, Earthworks category)
 
-`DiggerCost` 10, `DiggerMoveSpeed` 380, `DigActionSeconds` 0.55, `DigStepDepth` 0.3 m, `DigReach` 230 cm, `MaxQueuedCanals` 3, `VaultReward` 16, `WadeSpeedAtOneMetre` 0.45, `WaterSiteOrigin`. Site geometry lives in `DrownedVaultSite` constants in `DownstreamEarthworks.h`; changing it changes the puzzle, so re-run `test_water.ps1`.
+`DefaultCanalDepth` 1 m, `MaxCanalDepth` 3 m, `CanalDepthStep` 0.25 m, `DiggerCost` 10, `DiggerMoveSpeed` 380, `DigActionSeconds` 0.55, `DigStepDepth` 0.3 m, `DigReach` 230 cm, `MaxQueuedCanals` 3, `VaultReward` 16, `WadeSpeedAtOneMetre` 0.45, `WaterSiteOrigin`. Site geometry lives in `DrownedVaultSite` constants in `DownstreamEarthworks.h`; changing it changes the puzzle, so re-run `test_water.ps1`.
 
 ## Verify
 
@@ -67,7 +67,7 @@ powershell -ExecutionPolicy Bypass -File scripts/test_water.ps1     # 15 headles
 powershell -ExecutionPolicy Bypass -File scripts/verify_water.ps1   # real game world, isolated saves
 ```
 
-`verify_water.ps1` runs three isolated processes: `legacy` (schema 1 loads into a flooded site; planning needs a digger), `flow` (flooded start, wading slowdown, digger purchase and v3 save, real robot digs the culvert canal, water drains, vault pays 16 once, terrain saved), and `reload` (schema 3 restores digger, opened vault and the drained canal). The flow test shortens `DigActionSeconds` to 0.12 for pacing; every dig still goes through the robot and subsystem.
+`verify_water.ps1` runs four isolated processes (the fourth, `respawn`, kills the enemy farthest from home and loots a cache with 2 s timers, waits for both to return, then checks the F10 manual respawn): `legacy` (schema 1 loads into a flooded site; planning needs a digger), `flow` (flooded start, wading slowdown, digger purchase and v3 save, real robot digs the culvert canal, water drains, vault pays 16 once, terrain saved), and `reload` (schema 3 restores digger, opened vault and the drained canal). The flow test shortens `DigActionSeconds` to 0.12 for pacing; every dig still goes through the robot and subsystem.
 
 ## Verified 2026-10-09
 

@@ -3,7 +3,7 @@
 $testRoot = Join-Path $DownstreamRoot 'build\water-test-save'
 New-Item -ItemType Directory -Path $testRoot -Force | Out-Null
 $flowSave = Join-Path $testRoot 'flow'
-foreach ($mode in @('legacy','flow','reload')) {
+foreach ($mode in @('legacy','flow','reload','respawn')) {
     $saveDirectory = if ($mode -eq 'reload') { $flowSave } else { Join-Path $testRoot $mode }
     New-Item -ItemType Directory -Path $saveDirectory -Force | Out-Null
     $saveFile = Join-Path $saveDirectory 'prototype-save.json'
@@ -12,7 +12,7 @@ foreach ($mode in @('legacy','flow','reload')) {
             $generated = Join-Path $saveDirectory $name
             if (Test-Path -LiteralPath $generated -PathType Leaf) { Remove-Item -LiteralPath $generated }
         }
-        if ($mode -eq 'legacy') {
+        if ($mode -eq 'legacy' -or $mode -eq 'respawn') {
             [pscustomobject]@{version=1;banked_salvage=40;selected_skill='steady_aim'} | ConvertTo-Json | Set-Content -LiteralPath $saveFile -Encoding utf8
         } else {
             '{"version":2,"banked_salvage":30,"selected_skill":"salvage_handling","structures":[{"type":"storage","cell_x":2,"cell_y":0},{"type":"workshop","cell_x":1,"cell_y":1},{"type":"charger","cell_x":2,"cell_y":1}],"hauler":{"built":false,"battery":100,"cargo":0,"hauling_enabled":false}}' | Set-Content -LiteralPath $saveFile -Encoding utf8

@@ -11,7 +11,7 @@ foreach ($reload in @($false,$true)) {
     if (Test-Path -LiteralPath $resultPath) { Remove-Item -LiteralPath $resultPath }
     $verifyScript = (Join-Path $PSScriptRoot 'verify_expedition.py').Replace('\','/')
     $logPath = Join-Path $DownstreamRoot "build\$resultName.log"
-    $arguments = @("`"$DownstreamProject`"", "-ExecCmds=`"py $verifyScript`"", "-DownstreamSaveDir=`"$isolatedSave`"", '-unattended', '-nop4', '-nosplash', '-windowed', '-ResX=1280', '-ResY=720', '-NoSound', "-abslog=`"$logPath`"")
+    $arguments = @("`"$DownstreamProject`"", "-ExecCmds=`"py $verifyScript`"", "-DownstreamSaveDir=`"$isolatedSave`"", '-unattended', '-nop4', '-nosplash', '-windowed', '-ResX=1280', '-ResY=720', '-NoSound', '-DownstreamNoFieldRespawn', "-abslog=`"$logPath`"")
     if ($reload) { $arguments += '-DownstreamVerifyReload' }
     $process = Start-Process -FilePath $DownstreamEditor -ArgumentList $arguments -WindowStyle Hidden -PassThru
     $timer = [Diagnostics.Stopwatch]::StartNew()
