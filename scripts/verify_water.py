@@ -105,7 +105,7 @@ def tick(delta):
                 stage('respawn_wait')
                 return
             if mode == 'reload':
-                assert initial['version'] == 3 and initial['earthworks']['vault_opened'], 'Reload fixture lacks earthworks'
+                assert initial['version'] in (3, 4) and initial['earthworks']['vault_opened'], 'Reload fixture lacks earthworks'
                 assert economy.is_digger_built() and economy.is_vault_opened(), 'Earthworks flags not restored'
                 assert economy.get_saved_terrain_delta_count() > 0, 'Dug terrain not restored'
                 assert water.is_vault_accessible(), 'Restored canal did not keep the vault drained (depth %.2f)' % water.get_vault_depth()
@@ -141,7 +141,7 @@ def tick(delta):
             assert not economy.try_construct_digger(pawn), 'Second digger accepted'
             pawn.toggle_build_menu()
             saved = json.loads(save_file.read_text())
-            assert saved['version'] == 3 and saved['earthworks']['digger_built'], 'Digger not saved'
+            assert saved['version'] in (3, 4) and saved['earthworks']['digger_built'], 'Digger not saved'
             # Test pacing only: faster dig steps. Every step still goes through the same subsystem path.
             tuning = unreal.load_asset('/Game/Downstream/Data/DA_PrototypeTuning')
             tuning.set_editor_property('dig_action_seconds', 0.12)

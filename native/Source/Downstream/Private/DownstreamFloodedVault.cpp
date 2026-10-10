@@ -59,7 +59,7 @@ void ADownstreamFloodedVault::Tick(float DeltaSeconds)
     const auto* Expedition = UDownstreamExpeditionSubsystem::GetForWorld(this);
     if (!Water || !Expedition) return;
     Label->SetWorldLocation(GetActorLocation() + FVector(0, 0, 260));
-    if (Expedition->IsVaultOpened())
+    if (Water->IsVaultOpenedAt(VaultIndex))
     {
         Label->SetText(FText::FromString(TEXT("VAULT / empty")));
         Label->SetTextRenderColor(FColor(150, 160, 155));
@@ -68,8 +68,8 @@ void ADownstreamFloodedVault::Tick(float DeltaSeconds)
         Hatch->SetRelativeRotation(FRotator(0, 0, 70));
         return;
     }
-    const float Depth = Water->GetVaultDepth();
-    if (Water->IsVaultAccessible())
+    const float Depth = Water->GetVaultDepthAt(VaultIndex);
+    if (Water->IsVaultAccessibleAt(VaultIndex))
     {
         Label->SetText(FText::FromString(TEXT("VAULT / [E] open")));
         Label->SetTextRenderColor(FColor(255, 196, 82));

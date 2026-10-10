@@ -21,8 +21,9 @@ ADownstreamGameMode::ADownstreamGameMode()
 void ADownstreamGameMode::RestartPlayer(AController* NewPlayer)
 {
     if (!IsValid(NewPlayer)) return;
-    const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
-    RestartPlayerAtTransform(NewPlayer, FTransform(FRotator::ZeroRotator, Tuning->HomeLocation));
+    const auto* Expedition = UDownstreamExpeditionSubsystem::GetForWorld(this);
+    const FVector Home = Expedition ? Expedition->GetHomeLocation() : UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->HomeLocation;
+    RestartPlayerAtTransform(NewPlayer, FTransform(FRotator::ZeroRotator, Home));
 }
 
 void ADownstreamGameMode::RequestPlayerRespawn(AController* PlayerController, APawn* DeadPawn)
@@ -135,4 +136,26 @@ int32 ADownstreamGameMode::RespawnFieldNow()
     for (FCacheSlot& Slot : CacheSlots)
         if (!Slot.Pickup.IsValid() && SpawnCache(Slot)) ++Count;
     return Count;
+}
+
+void ADownstreamGameMode::RegisterFieldEnemy(ADownstreamEnemy* Enemy)
+{
+    if (!IsValid(Enemy)) return;
+    if (!bFieldRegistered) RegisterField();
+    FEnemySlot Slot;
+    Slot.Enemy = Enemy;
+    Slot.Spawn = Enemy->GetActorTransform();
+    Slot.Kind = Enemy->Kind;
+    EnemySlots.Add(Slot);
+}
+
+void ADownstreamGameMode::RegisterFieldCache(ADownstreamSalvagePickup* Pickup)
+{
+    if (!IsValid(Pickup)) return;
+    if (!bFieldRegistered) RegisterField();
+    FCacheSlot Slot;
+    Slot.Pickup = Pickup;
+    Slot.Location = Pickup->GetActorLocation();
+    Slot.Amount = Pickup->Amount;
+    CacheSlots.Add(Slot);
 }

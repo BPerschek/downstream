@@ -114,7 +114,7 @@ void ADownstreamSettlementManager::SyncSettlement()
     }
     if (Expedition->IsDiggerBuilt() && !IsValid(Digger))
     {
-        FVector Base = UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->BuildGridCenter;
+        FVector Base = Expedition->GetBuildGridCenter();
         if (auto* Workshop = GetBuilding(EDownstreamStructureType::Workshop)) Base = Workshop->GetActorLocation();
         FActorSpawnParameters Params;
         Params.Owner = this;
@@ -139,7 +139,7 @@ ADownstreamSettlementBuilding* ADownstreamSettlementManager::GetBuilding(EDownst
 
 FVector ADownstreamSettlementManager::GetHaulerSpawnLocation() const
 {
-    FVector Base = UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->BuildGridCenter;
+    FVector Base = Expedition ? Expedition->GetBuildGridCenter() : UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->BuildGridCenter;
     if (auto* Storage = GetBuilding(EDownstreamStructureType::Storage)) Base = Storage->GetActorLocation();
     // A cardinal dock avoids the box's nav expansion and is within the core unload radius
     // for restored cargo. Never spawn a character capsule inside the building itself.

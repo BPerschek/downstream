@@ -25,6 +25,9 @@ public:
     UFUNCTION(BlueprintPure, Category="Downstream|Field") int32 GetTrackedEnemyCount() const { return EnemySlots.Num(); }
     UFUNCTION(BlueprintPure, Category="Downstream|Field") int32 GetTrackedCacheCount() const { return CacheSlots.Num(); }
     UFUNCTION(BlueprintPure, Category="Downstream|Field") bool IsFieldRespawnEnabled() const { return bFieldRespawnEnabled; }
+    // Runtime-spawned world content (M2) joins the same respawn rules as level-placed actors.
+    UFUNCTION(BlueprintCallable, Category="Downstream|Field") void RegisterFieldEnemy(ADownstreamEnemy* Enemy);
+    UFUNCTION(BlueprintCallable, Category="Downstream|Field") void RegisterFieldCache(ADownstreamSalvagePickup* Pickup);
 
 private:
     struct FEnemySlot

@@ -1,4 +1,5 @@
 #include "DownstreamDigger.h"
+#include "Sound/SoundBase.h"
 
 #include "DownstreamExpeditionSubsystem.h"
 #include "DownstreamPrototypeTuning.h"
@@ -11,6 +12,7 @@
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Materials/MaterialInterface.h"
 #include "Misc/PackageName.h"
@@ -34,6 +36,8 @@ ADownstreamDigger::ADownstreamDigger()
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.TickInterval = 0.0f;
     Tags.AddUnique(TEXT("DownstreamDigger"));
+    // Hostiles may target and shoot a working robot; the tag drops while it is wrecked.
+    Tags.AddUnique(TEXT("DownstreamRobot"));
     GetCapsuleComponent()->InitCapsuleSize(38.0f, 58.0f);
     GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
     GetCapsuleComponent()->SetCanEverAffectNavigation(false);
@@ -109,13 +113,82 @@ void ADownstreamDigger::BeginPlay()
     }
     ProgressLocation = GetActorLocation();
     LastProgressTime = GetWorld()->GetTimeSeconds();
+    Health = GetMaxHealth();
+}
+
+float ADownstreamDigger::GetMaxHealth() const
+{
+    return FMath::Max(1.0f, UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->DiggerHealth);
+}
+
+float ADownstreamDigger::GetRebuildRemaining() const
+{
+    return bWrecked && GetWorld() ? FMath::Max(0.0f, static_cast<float>(RebuildAt - GetWorld()->GetTimeSeconds())) : 0.0f;
+}
+
+float ADownstreamDigger::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    if (bWrecked || !FMath::IsFinite(DamageAmount) || DamageAmount <= 0.0f) return 0.0f;
+    if (Health < 0.0f) Health = GetMaxHealth();
+    Health = FMath::Max(0.0f, Health - DamageAmount);
+    FlashRemaining = 0.2f;
+    if (const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld()); Tuning->HitSound)
+        UGameplayStatics::PlaySoundAtLocation(this, Tuning->HitSound, GetActorLocation(), 0.6f, 0.7f);
+    if (Health <= 0.0f) Wreck();
+    return DamageAmount;
+}
+
+void ADownstreamDigger::Wreck()
+{
+    bWrecked = true;
+    ++TimesWrecked;
+    Tags.Remove(TEXT("DownstreamRobot"));
+    StopMoving();
+    GetCharacterMovement()->StopMovementImmediately();
+    RebuildAt = GetWorld()->GetTimeSeconds() + FMath::Max(1.0f, UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->DiggerRebuildSeconds);
+    NextRebuildAttempt = RebuildAt;
+    BotMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, 35.0f));
+    if (const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld()); Tuning && Tuning->WreckSound)
+        UGameplayStatics::PlaySoundAtLocation(this, Tuning->WreckSound, GetActorLocation());
+    WorkLight->SetLightColor(FLinearColor(1.0f, 0.1f, 0.05f));
+    if (auto* Expedition = UDownstreamExpeditionSubsystem::GetForWorld(this))
+        Expedition->PostStatus(FString::Printf(TEXT("Your digger was wrecked! It reassembles at the workshop in %.0f s for %d salvage."),
+            UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->DiggerRebuildSeconds, UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->DiggerRebuildCost));
+}
+
+void ADownstreamDigger::TickWrecked(double Now)
+{
+    const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
+    if (Now < RebuildAt)
+    {
+        SetStatus(FString::Printf(TEXT("WRECKED / rebuild %.0fs"), RebuildAt - Now));
+        return;
+    }
+    if (Now < NextRebuildAttempt) return;
+    NextRebuildAttempt = Now + 3.0;
+    auto* Expedition = UDownstreamExpeditionSubsystem::GetForWorld(this);
+    if (!Expedition || !Expedition->TrySpendBanked(Tuning->DiggerRebuildCost, TEXT("Digger rebuild")))
+    {
+        SetStatus(FString::Printf(TEXT("WRECKED / needs %d banked salvage"), Tuning->DiggerRebuildCost));
+        return;
+    }
+    FVector Home;
+    if (GetHomeLocation(Home)) TeleportTo(Home + FVector(0, 0, 70.0f), FRotator::ZeroRotator);
+    bWrecked = false;
+    Health = GetMaxHealth();
+    Tags.AddUnique(TEXT("DownstreamRobot"));
+    BotMesh->SetRelativeRotation(FRotator::ZeroRotator);
+    WorkLight->SetLightColor(FLinearColor(1.0f, 0.6f, 0.15f));
+    LastProgressTime = Now;
+    Expedition->PostStatus(TEXT("Digger rebuilt at the workshop. Its queued canal is waiting."));
 }
 
 void ADownstreamDigger::SetStatus(const FString& NewStatus)
 {
-    if (Status.ToString() == NewStatus) return;
-    Status = FText::FromString(NewStatus);
-    WorldLabel->SetText(FText::FromString(TEXT("DIGGER / ") + NewStatus));
+    if (Status.ToString() != NewStatus) Status = FText::FromString(NewStatus);
+    const FString Label = FString::Printf(TEXT("DIGGER %d%% / %s"),
+        Health < 0.0f ? 100 : FMath::RoundToInt(100.0f * Health / FMath::Max(1.0f, GetMaxHealth())), *NewStatus);
+    if (WorldLabel->Text.ToString() != Label) WorldLabel->SetText(FText::FromString(Label));
 }
 
 bool ADownstreamDigger::GetHomeLocation(FVector& Out) const
@@ -192,6 +265,20 @@ void ADownstreamDigger::Tick(float DeltaSeconds)
     auto* Water = UDownstreamWaterSubsystem::GetForWorld(this);
     const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
     bDigging = false;
+    if (Health < 0.0f) Health = GetMaxHealth();
+    if (FlashRemaining > 0.0f)
+    {
+        FlashRemaining = FMath::Max(0.0f, FlashRemaining - DeltaSeconds);
+        WorkLight->SetLightColor(FlashRemaining > 0.0f ? FLinearColor(1.0f, 0.15f, 0.1f) : FLinearColor(1.0f, 0.6f, 0.15f));
+    }
+    if (bWrecked)
+    {
+        TickWrecked(Now);
+        return;
+    }
+    // Field repairs at home.
+    if (const auto* Expedition = UDownstreamExpeditionSubsystem::GetForWorld(this); Expedition && Expedition->IsAtHome(GetActorLocation()))
+        Health = FMath::Min(GetMaxHealth(), Health + Tuning->DiggerRepairPerSecond * DeltaSeconds);
     FIntPoint Cell;
     if (Water && Water->GetNextDigCell(Cell))
     {

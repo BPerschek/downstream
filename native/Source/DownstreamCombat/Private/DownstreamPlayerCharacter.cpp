@@ -80,6 +80,7 @@ void ADownstreamPlayerCharacter::SetupPlayerInputComponent(UInputComponent* Inpu
     Input->BindAction(TEXT("DigDepthUp"), IE_Pressed, this, &ADownstreamPlayerCharacter::DeepenCanals);
     Input->BindAction(TEXT("DigDepthDown"), IE_Pressed, this, &ADownstreamPlayerCharacter::ShallowCanals);
     Input->BindAction(TEXT("DevRespawnField"), IE_Pressed, this, &ADownstreamPlayerCharacter::RespawnFieldNow);
+    Input->BindAction(TEXT("DevGrantSalvage"), IE_Pressed, this, &ADownstreamPlayerCharacter::DevGrantSalvage);
 }
 
 void ADownstreamPlayerCharacter::Tick(float DeltaSeconds)
@@ -206,7 +207,10 @@ void ADownstreamPlayerCharacter::Dodge()
     DodgeEndTime = GetWorld()->GetTimeSeconds() + 0.22;
     GetCharacterMovement()->GroundFriction = 0.0f;
     GetCharacterMovement()->BrakingDecelerationWalking = 0.0f;
-    LaunchCharacter(Direction * Tuning->DodgeStrength + FVector(0.0f, 0.0f, 60.0f), true, true);
+    // In a canal or trench the dodge becomes a scramble up the bank.
+    const float Trench = GetTrenchDepth();
+    const float Lift = Trench > 0.5f ? FMath::Clamp(250.0f + Trench * 330.0f, 400.0f, 1200.0f) : 60.0f;
+    LaunchCharacter(Direction * Tuning->DodgeStrength * (Trench > 0.5f ? 0.55f : 1.0f) + FVector(0.0f, 0.0f, Lift), true, true);
 }
 
 void ADownstreamPlayerCharacter::EndDodge()
@@ -421,4 +425,26 @@ void ADownstreamPlayerCharacter::RespawnFieldNow()
         if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
             Expedition->PostStatus(FString::Printf(TEXT("Developer: respawned %d enemies/caches."), Count));
     }
+}
+
+float ADownstreamPlayerCharacter::GetTrenchDepth() const
+{
+    const auto* Water = UDownstreamWaterSubsystem::GetForWorld(const_cast<ADownstreamPlayerCharacter*>(this));
+    FIntPoint Cell;
+    if (!Water || !Water->WorldToCell(GetActorLocation(), Cell)) return 0.0f;
+    const float Here = Water->GetCellGround(Cell);
+    float Highest = Here;
+    for (int32 DY = -2; DY <= 2; ++DY)
+        for (int32 DX = -2; DX <= 2; ++DX)
+        {
+            const FIntPoint Near(Cell.X + DX, Cell.Y + DY);
+            if (Near.X >= 0 && Near.Y >= 0 && Near.X < Water->GetGridSize().X && Near.Y < Water->GetGridSize().Y)
+                Highest = FMath::Max(Highest, Water->GetCellGround(Near));
+        }
+    return Highest - Here;
+}
+
+void ADownstreamPlayerCharacter::DevGrantSalvage()
+{
+    if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>()) Expedition->DevGrantSalvage(25);
 }

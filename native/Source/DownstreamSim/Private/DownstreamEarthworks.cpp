@@ -198,6 +198,66 @@ float DigJob::Progress(const WaterGrid& grid) const
     return total <= 0.0 ? 1.0f : static_cast<float>(done / total);
 }
 
+bool EarthworksState::IsVaultOpened(int id) const
+{
+    return std::find(OpenedVaults.begin(), OpenedVaults.end(), id) != OpenedVaults.end();
+}
+
+bool EarthworksState::OpenVault(int id)
+{
+    if (id < 0 || IsVaultOpened(id)) return false;
+    OpenedVaults.push_back(id);
+    return true;
+}
+
+int EarthworksState::GetOutpostMask(int id) const
+{
+    for (const auto& m : OutpostMasks) if (m.first == id) return m.second;
+    return 0;
+}
+
+void EarthworksState::SetOutpostMask(int id, int mask)
+{
+    for (auto& m : OutpostMasks) if (m.first == id) { m.second = mask; return; }
+    OutpostMasks.push_back({id, mask});
+}
+
+bool EarthworksState::LoadWorld(std::uint32_t seed, const std::vector<int>& openedVaults, const std::vector<std::pair<int, int>>& outpostMasks)
+{
+    std::vector<int> vaults;
+    for (int v : openedVaults)
+    {
+        if (v < 0 || v > 64 || std::find(vaults.begin(), vaults.end(), v) != vaults.end()) return false;
+        vaults.push_back(v);
+    }
+    std::vector<std::pair<int, int>> masks;
+    for (const auto& m : outpostMasks)
+    {
+        if (m.first < 0 || m.first > 64 || m.second < 0 || m.second >= (1 << 20)) return false;
+        for (const auto& p : masks) if (p.first == m.first) return false;
+        masks.push_back(m);
+    }
+    Seed = seed;
+    OpenedVaults = std::move(vaults);
+    OutpostMasks = std::move(masks);
+    return true;
+}
+
+void EarthworksState::CaptureTerrain(const WaterGrid& grid, const std::vector<float>& baseGround)
+{
+    if (baseGround.size() != static_cast<std::size_t>(grid.Width()) * grid.Height())
+        throw std::invalid_argument("Base ground does not match grid");
+    std::vector<TerrainDelta> result;
+    for (int y = 0; y < grid.Height(); ++y)
+        for (int x = 0; x < grid.Width(); ++x)
+        {
+            const auto base = static_cast<std::int32_t>(std::lround(baseGround[static_cast<std::size_t>(y) * grid.Width() + x] * 1000.0f));
+            const auto now = static_cast<std::int32_t>(std::lround(grid.Ground(x, y) * 1000.0f));
+            if (base != now) result.push_back({x, y, now});
+        }
+    Terrain = std::move(result);
+}
+
 void EarthworksState::CaptureTerrain(const WaterGrid& grid)
 {
     std::vector<TerrainDelta> result;
@@ -216,6 +276,7 @@ void EarthworksState::ApplyTerrain(WaterGrid& grid) const
     for (const auto& d : Terrain)
     {
         const int x = static_cast<int>(d.X), y = static_cast<int>(d.Y);
+        if (!grid.InBounds(x, y)) continue;
         // Water above an edited cell stays put and re-settles on the next ticks.
         grid.SetGround(x, y, static_cast<float>(d.HeightMm) / 1000.0f);
     }
@@ -223,18 +284,19 @@ void EarthworksState::ApplyTerrain(WaterGrid& grid) const
 
 bool EarthworksState::LoadPersisted(bool diggerBuilt, bool vaultOpened, const std::vector<TerrainDelta>& terrain)
 {
-    const auto config = DrownedVaultConfig();
+    // Bounds are checked again when deltas are applied to a concrete site grid.
     std::vector<TerrainDelta> validated;
     for (const auto& d : terrain)
     {
-        if (d.X < 0 || d.Y < 0 || d.X >= DrownedVaultSite::Width || d.Y >= DrownedVaultSite::Height) return false;
-        if (d.HeightMm < std::lround(config.MinimumGround * 1000.0f) || d.HeightMm > std::lround(config.MaximumGround * 1000.0f)) return false;
+        if (d.X < 0 || d.Y < 0 || d.X >= 4096 || d.Y >= 4096) return false;
+        if (d.HeightMm < 0 || d.HeightMm > 20000) return false;
         for (const auto& p : validated) if (p.X == d.X && p.Y == d.Y) return false;
         validated.push_back(d);
     }
-    if (validated.size() > static_cast<std::size_t>(DrownedVaultSite::Width * DrownedVaultSite::Height)) return false;
+    if (validated.size() > 4096U * 64U) return false;
     DiggerBuilt = diggerBuilt;
-    VaultOpened = vaultOpened;
+    OpenedVaults.clear();
+    if (vaultOpened) OpenedVaults.push_back(0);
     Terrain = std::move(validated);
     return true;
 }

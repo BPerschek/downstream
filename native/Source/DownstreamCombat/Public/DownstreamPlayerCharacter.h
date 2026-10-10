@@ -40,6 +40,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Earthworks") void DeepenCanals();
     UFUNCTION(BlueprintCallable, Category="Earthworks") void ShallowCanals();
     UFUNCTION(BlueprintCallable, Category="Debug") void RespawnFieldNow();
+    UFUNCTION(BlueprintCallable, Category="Debug") void DevGrantSalvage();
+    // Metres the surrounding ground stands above the player's cell (a trench or canal).
+    UFUNCTION(BlueprintPure, Category="Combat") float GetTrenchDepth() const;
     UFUNCTION(BlueprintPure, Category="Earthworks") bool IsDigPlannerOpen() const { return bDigPlannerOpen; }
     UFUNCTION(BlueprintPure, Category="Earthworks") bool IsDraggingCanal() const { return bDraggingCanal; }
     UFUNCTION(BlueprintPure, Category="Earthworks") FIntPoint GetCanalDragStart() const { return CanalDragStart; }

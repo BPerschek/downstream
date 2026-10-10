@@ -66,8 +66,24 @@ public:
     UFUNCTION(BlueprintPure, Category="Downstream|Expedition") bool IsSaveBlocked() const { return bSaveBlocked; }
     UFUNCTION(BlueprintCallable, Category="Downstream|Expedition") void PostStatus(const FString& Message) { SetStatus(Message); }
     // Commits only when the save write succeeds.
-    bool CommitVaultOpened();
-    bool CommitEarthworksTerrain(const downstream::WaterGrid& Grid);
+    bool CommitVaultOpened(int32 VaultId = 0);
+    bool CommitEarthworksTerrain(const downstream::WaterGrid& Grid, const std::vector<float>& BaseGround);
+    bool CommitOutpostMask(int32 OutpostId, int32 Mask);
+    UFUNCTION(BlueprintPure, Category="Downstream|Earthworks") bool IsVaultIdOpened(int32 VaultId) const { return Earthworks.IsVaultOpened(VaultId); }
+
+    // ---- World (procedural frontier) mode: M2_World and world-save.json.
+    UFUNCTION(BlueprintPure, Category="Downstream|World") bool IsWorldMode() const { return bWorldMode; }
+    UFUNCTION(BlueprintPure, Category="Downstream|World") int64 GetWorldSeed() const { return static_cast<int64>(Earthworks.GetSeed()); }
+    // Home and build grid; the world places them from the generated layout.
+    UFUNCTION(BlueprintPure, Category="Downstream|Expedition") FVector GetHomeLocation() const;
+    UFUNCTION(BlueprintPure, Category="Downstream|Expedition") float GetHomeRadius() const;
+    UFUNCTION(BlueprintPure, Category="Downstream|Settlement") FVector GetBuildGridCenter() const;
+    void SetLayoutOverride(const FVector& Home, float Radius, const FVector& GridCenter);
+    UFUNCTION(BlueprintPure, Category="Downstream|Expedition") bool HasLayoutOverride() const { return bLayoutOverride; }
+    // Spends banked salvage for repairs/services; saved before memory changes.
+    UFUNCTION(BlueprintCallable, Category="Downstream|Expedition") bool TrySpendBanked(int32 Amount, const FString& Reason);
+    // Developer helper (F11): adds banked salvage and saves.
+    UFUNCTION(BlueprintCallable, Category="Downstream|Debug") bool DevGrantSalvage(int32 Amount);
     const downstream::EarthworksState& GetEarthworks() const { return Earthworks; }
 
 private:
@@ -85,5 +101,10 @@ private:
     UPROPERTY(Transient) TObjectPtr<UDownstreamPrototypeTuning> LoadedTuning;
     bool bTriedTuningLoad = false;
     bool bSaveBlocked = false;
+    bool bWorldMode = false;
+    bool bLayoutOverride = false;
+    FVector HomeOverride = FVector::ZeroVector;
+    float HomeRadiusOverride = 0.0f;
+    FVector GridCenterOverride = FVector::ZeroVector;
     FText StatusMessage;
 };

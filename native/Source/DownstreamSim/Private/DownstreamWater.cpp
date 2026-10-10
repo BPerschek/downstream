@@ -136,6 +136,17 @@ double WaterGrid::RaiseGround(int x, int y, float amount, float ceiling)
     return moved;
 }
 
+double WaterGrid::RemoveWater(int x, int y, double volume)
+{
+    if (!std::isfinite(volume) || volume < 0.0) throw std::invalid_argument("Removed volume must be finite and nonnegative");
+    const auto i = Index(x, y);
+    const double area = static_cast<double>(Settings.CellSize) * Settings.CellSize;
+    const double removed = std::min(volume, static_cast<double>(Depths[i]) * area);
+    Depths[i] = static_cast<float>(std::max(0.0, Depths[i] - removed / area));
+    Sunk += removed;
+    return removed;
+}
+
 void WaterGrid::SetSource(int x, int y, float rate)
 {
     RequireFinite(rate, "Source rate must be finite");

@@ -241,7 +241,7 @@ int main()
         e.ApplyTerrain(fresh);
         Near(fresh.Ground(3, 3), 1.3, 1e-6, "applied delta");
         EarthworksState other;
-        Require(!other.LoadPersisted(true, false, {{40, 0, 100}}), "out-of-grid delta accepted");
+        Require(!other.LoadPersisted(true, false, {{5000, 0, 100}}), "out-of-grid delta accepted");
         Require(!other.LoadPersisted(true, false, {{1, 1, 100}, {1, 1, 200}}), "duplicate delta accepted");
         Require(!other.LoadPersisted(true, false, {{1, 1, 99999}}), "height out of range accepted");
         Require(!other.IsDiggerBuilt(), "failed load changed state");

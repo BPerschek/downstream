@@ -67,40 +67,80 @@ void ADownstreamEnemy::BeginPlay()
     RegisterFeedbackMesh(ReactorCore, Color);
 }
 
+bool ADownstreamEnemy::IsTargetAlive(const AActor* Target)
+{
+    if (!IsValid(Target)) return false;
+    if (const auto* Combatant = Cast<ADownstreamCombatCharacter>(Target)) return !Combatant->IsDead();
+    // Robots drop the tag while wrecked.
+    return Target->ActorHasTag(TEXT("DownstreamRobot"));
+}
+
+AActor* ADownstreamEnemy::ChooseTarget() const
+{
+    const auto* Tuning = GetTuning();
+    auto* Player = Cast<ADownstreamPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(const_cast<ADownstreamEnemy*>(this), 0));
+    const auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>();
+    AActor* Best = nullptr;
+    float BestDistance = FMath::Square(Tuning->AggroRange);
+    if (Player && !Player->IsDead() && !(Expedition && Expedition->IsAtHome(Player->GetActorLocation())))
+    {
+        const float Distance = FVector::DistSquared2D(GetActorLocation(), Player->GetActorLocation());
+        if (Distance <= BestDistance) { Best = Player; BestDistance = Distance; }
+    }
+    TArray<AActor*> Robots;
+    UGameplayStatics::GetAllActorsWithTag(this, TEXT("DownstreamRobot"), Robots);
+    for (AActor* Robot : Robots)
+    {
+        if (!IsTargetAlive(Robot) || (Expedition && Expedition->IsAtHome(Robot->GetActorLocation()))) continue;
+        // Robots draw less attention than the player unless they are much closer.
+        const float Distance = FVector::DistSquared2D(GetActorLocation(), Robot->GetActorLocation()) * 1.6f;
+        if (Distance <= BestDistance) { Best = Robot; BestDistance = Distance; }
+    }
+    return Best;
+}
+
 void ADownstreamEnemy::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     if (IsDead()) return;
-    auto* Player = Cast<ADownstreamPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-    const auto* Tuning = GetTuning();
-    const auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>();
-    const bool bProtectedHome = Player && Expedition && Expedition->IsAtHome(Player->GetActorLocation());
-    if (!Player || Player->IsDead() || bProtectedHome
-        || FVector::DistSquared2D(GetActorLocation(), Player->GetActorLocation()) > FMath::Square(Tuning->AggroRange))
+    AActor* Target = ChooseTarget();
+    CurrentTarget = Target;
+    if (!Target)
     {
-        if (FVector::DistSquared2D(GetActorLocation(), SpawnLocation) > FMath::Square(90.0f)) MoveToward(SpawnLocation, 65.0f);
-        else StopMoving();
+        ReturnToPost();
         return;
     }
-    const FVector ToPlayer = Player->GetActorLocation() - GetActorLocation();
-    const float Distance = ToPlayer.Size2D();
-    if (!ToPlayer.IsNearlyZero()) SetActorRotation(ToPlayer.GetSafeNormal2D().Rotation());
-    const bool bChaser = Kind == EDownstreamEnemyKind::Chaser;
-    const float AttackRange = bChaser ? Tuning->ChaserAttackRange : Tuning->ShooterRange;
-    const bool bLineOfSight = HasClearShot(Player);
-    if (Distance > (bChaser ? AttackRange * 0.85f : AttackRange * 0.78f) || !bLineOfSight)
-        MoveToward(Player->GetActorLocation(), bChaser ? AttackRange * 0.55f : AttackRange * 0.6f);
-    else StopMoving();
-    if (Distance <= AttackRange && bLineOfSight) AttackPlayer(Player);
+    FightTarget(Target);
 }
 
-bool ADownstreamEnemy::HasClearShot(const ADownstreamPlayerCharacter* Player) const
+void ADownstreamEnemy::ReturnToPost()
+{
+    if (FVector::DistSquared2D(GetActorLocation(), SpawnLocation) > FMath::Square(90.0f)) MoveToward(SpawnLocation, 65.0f);
+    else StopMoving();
+}
+
+void ADownstreamEnemy::FightTarget(AActor* Target)
+{
+    const auto* Tuning = GetTuning();
+    const FVector ToTarget = Target->GetActorLocation() - GetActorLocation();
+    const float Distance = ToTarget.Size2D();
+    if (!ToTarget.IsNearlyZero()) SetActorRotation(ToTarget.GetSafeNormal2D().Rotation());
+    const bool bChaser = Kind == EDownstreamEnemyKind::Chaser;
+    const float AttackRange = bChaser ? Tuning->ChaserAttackRange : Tuning->ShooterRange;
+    const bool bLineOfSight = HasClearShot(Target);
+    if (Distance > (bChaser ? AttackRange * 0.85f : AttackRange * 0.78f) || !bLineOfSight)
+        MoveToward(Target->GetActorLocation(), bChaser ? AttackRange * 0.55f : AttackRange * 0.6f);
+    else StopMoving();
+    if (Distance <= AttackRange && bLineOfSight) AttackTarget(Target);
+}
+
+bool ADownstreamEnemy::HasClearShot(const AActor* Target) const
 {
     FHitResult Hit;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(DownstreamEnemySight), false, this);
     if (!GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation() + FVector(0.0f, 0.0f, 12.0f),
-        Player->GetActorLocation() + FVector(0.0f, 0.0f, 12.0f), ECC_Visibility, Query)) return true;
-    return Hit.GetActor() == Player;
+        Target->GetActorLocation() + FVector(0.0f, 0.0f, 12.0f), ECC_Visibility, Query)) return true;
+    return Hit.GetActor() == Target;
 }
 
 void ADownstreamEnemy::MoveToward(const FVector& Location, float AcceptanceRadius)
@@ -120,17 +160,18 @@ void ADownstreamEnemy::StopMoving()
     GetCharacterMovement()->StopMovementImmediately();
 }
 
-void ADownstreamEnemy::AttackPlayer(ADownstreamPlayerCharacter* Player)
+void ADownstreamEnemy::AttackTarget(AActor* Target)
 {
     const auto* Tuning = GetTuning();
     const bool bChaser = Kind == EDownstreamEnemyKind::Chaser;
     if (!AttackCooldown.TryConsume(GetWorld()->GetTimeSeconds(), bChaser ? Tuning->ChaserCooldown : Tuning->ShooterCooldown)) return;
     if (bChaser)
     {
-        Player->ReceiveCombatDamage(Tuning->ChaserDamage, this);
+        if (auto* Combatant = Cast<ADownstreamCombatCharacter>(Target)) Combatant->ReceiveCombatDamage(Tuning->ChaserDamage, this);
+        else UGameplayStatics::ApplyDamage(Target, Tuning->ChaserDamage, GetController(), this, nullptr);
         return;
     }
-    const FVector Direction = (Player->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+    const FVector Direction = (Target->GetActorLocation() - GetActorLocation()).GetSafeNormal();
     const FTransform SpawnTransform(Direction.Rotation(),
         GetActorLocation() + Direction * 62.0f + FVector(0.0f, 0.0f, 12.0f));
     if (auto* Projectile = GetWorld()->SpawnActorDeferred<ADownstreamProjectile>(ADownstreamProjectile::StaticClass(),
@@ -147,7 +188,7 @@ void ADownstreamEnemy::OnCombatDeath()
     Tags.Remove(TEXT("DownstreamHostile"));
     StopMoving();
     if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
-        Expedition->SpawnSalvage(GetActorLocation(), 2);
+        if (SalvageDrop() > 0) Expedition->SpawnSalvage(GetActorLocation(), SalvageDrop());
     SetActorEnableCollision(false);
     RobotMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, 75.0f));
     ReactorCore->SetVisibility(false);

@@ -2,6 +2,10 @@
 
 The owner's 2026-10-09 request prioritized a working level now, original or open-source assets as needed, and an up-to-date repository for future agents. The current slice is a single-player home-to-ruin expedition in Unreal 5.8. It advances M1 gameplay while incomplete M0 performance criteria remain open. The [v0.3 design brief](reference/DOWNSTREAM_Design_Doc_v0.3.md) is reference content; current user direction governs scope.
 
+## 2026-10-10: menu and the frontier
+
+The game now starts on a main menu. The seeded frontier (`M2_World`) is the main mode and is described in [FRONTIER](FRONTIER.md): procedural rivers, Dam Cult outposts below them behind levees, flooding as the way in, engineers and guards as the response, digger health with wreck and rebuild. Everything below still describes the training grounds (`M1_Expedition`), which share the controls, economy, settlement and robots.
+
 ## Current player loop
 
 Launch `/Game/Downstream/Maps/M1_Expedition` through `Launch_DOWNSTREAM.cmd` in the repository or `scripts/play.ps1`. The camera follows at pitch -55 degrees and yaw 45 degrees. WASD moves relative to it, the mouse aims, holding left mouse fires, right mouse strikes nearby enemies, Space dodges, and E interacts. Keys 1/2 choose one free starter node: `steady_aim` adds 15% ranged damage; `salvage_handling` adds four carry slots. A successfully saved choice cannot be exchanged through the current UI.

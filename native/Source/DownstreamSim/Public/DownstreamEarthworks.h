@@ -107,25 +107,39 @@ public:
     std::int32_t GetDiggerCost() const noexcept { return DiggerCost; }
     void SetDiggerCost(std::int32_t cost) noexcept { DiggerCost = cost; }
     bool IsDiggerBuilt() const noexcept { return DiggerBuilt; }
-    bool IsVaultOpened() const noexcept { return VaultOpened; }
+    // Classic M1 has one vault, id 0. Worlds have several.
+    bool IsVaultOpened() const noexcept { return IsVaultOpened(0); }
+    bool IsVaultOpened(int id) const;
+    const std::vector<int>& GetOpenedVaults() const noexcept { return OpenedVaults; }
+    std::uint32_t GetSeed() const noexcept { return Seed; }
+    void SetSeed(std::uint32_t seed) noexcept { Seed = seed; }
+    int GetOutpostMask(int id) const;
+    void SetOutpostMask(int id, int mask);
+    const std::vector<std::pair<int, int>>& GetOutpostMasks() const noexcept { return OutpostMasks; }
     const std::vector<TerrainDelta>& GetTerrain() const noexcept { return Terrain; }
 
     // Requires the workshop (checked by caller) and enough banked salvage.
     bool CanBuildDigger(std::int32_t banked) const noexcept { return !DiggerBuilt && DiggerCost > 0 && banked >= DiggerCost; }
     void MarkDiggerBuilt() noexcept { DiggerBuilt = true; }
-    bool OpenVault() noexcept { if (VaultOpened) return false; VaultOpened = true; return true; }
+    bool OpenVault() { return OpenVault(0); }
+    bool OpenVault(int id);
 
     // Capture the difference between the grid and the generated site.
     void CaptureTerrain(const WaterGrid& grid);
+    void CaptureTerrain(const WaterGrid& grid, const std::vector<float>& baseGround);
     // Apply stored deltas onto a freshly built site grid.
     void ApplyTerrain(WaterGrid& grid) const;
     // Validates everything before replacing state; false leaves this unchanged.
     bool LoadPersisted(bool diggerBuilt, bool vaultOpened, const std::vector<TerrainDelta>& terrain);
+    // World saves: seed, every opened vault id and outpost destruction masks.
+    bool LoadWorld(std::uint32_t seed, const std::vector<int>& openedVaults, const std::vector<std::pair<int, int>>& outpostMasks);
 
 private:
     std::int32_t DiggerCost = 10;
     bool DiggerBuilt = false;
-    bool VaultOpened = false;
+    std::uint32_t Seed = 0;
+    std::vector<int> OpenedVaults;
+    std::vector<std::pair<int, int>> OutpostMasks;
     std::vector<TerrainDelta> Terrain;
 };
 }

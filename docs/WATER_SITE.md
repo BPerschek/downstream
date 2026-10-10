@@ -1,5 +1,7 @@
 # Drowned Vault: water, earthworks and the digger
 
+This is the training-grounds site (`M1_Expedition`). The same water, canal and digger rules drive the seeded frontier; see [FRONTIER](FRONTIER.md) for outposts, levee breaches, schema 4 and the procedural world.
+
 Added 2026-10-09 (evening). This is the first slice of the design brief's M3/M4 terrain and water work, wired into the existing M1 loop so it matters to play rather than being a sandbox. Per the brief, the canal is not the objective; the vault is.
 
 ## What the player does

@@ -21,6 +21,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Vault") TObjectPtr<UStaticMeshComponent> Hatch;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Vault") TObjectPtr<UPointLightComponent> Beacon;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Vault") TObjectPtr<UTextRenderComponent> Label;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Downstream|Vault") int32 VaultIndex = 0;
 
 protected:
     virtual void BeginPlay() override;

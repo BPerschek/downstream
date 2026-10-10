@@ -77,6 +77,17 @@ public:
     // Movement speed multiplier when standing in 1 m of water; deeper water is slower still.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0.05", ClampMax="1")) float WadeSpeedAtOneMetre = 0.45f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks") FVector WaterSiteOrigin = FVector(300.0f, -2600.0f, 0.0f);
+    // Dam Cult outposts and the digger's survival (M2 world).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Outposts", meta=(ClampMin="5")) float OutpostRespawnSeconds = 45.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Outposts", meta=(ClampMin="1")) float EngineerHealth = 45.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Outposts", meta=(ClampMin="0.1")) float DamActionSeconds = 1.1f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Outposts", meta=(ClampMin="0", ClampMax="1")) float StructureGunfireScale = 0.35f;
+    // Guards switch to the digger when it works within this distance of their outpost's levee.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Outposts", meta=(ClampMin="0")) float DiggerThreatRadius = 1400.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="1")) float DiggerHealth = 150.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="1")) float DiggerRebuildSeconds = 25.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0")) int32 DiggerRebuildCost = 4;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Earthworks", meta=(ClampMin="0")) float DiggerRepairPerSecond = 12.0f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> ShotSound;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> HitSound;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> PickupSound;
@@ -84,6 +95,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> BuildSound;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> ErrorSound;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> DockSound;
+    // Frontier (synthesized, art/audio/S_Frontier*.wav).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> AlarmSound;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> CollapseSound;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> SandbagSound;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> BreachSound;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> WreckSound;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Feedback") TObjectPtr<USoundBase> WaterLoopSound;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Appearance") TObjectPtr<UMaterialInterface> EnemyMaterial;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Appearance") TObjectPtr<UMaterialInterface> ProjectileMaterial;
 };

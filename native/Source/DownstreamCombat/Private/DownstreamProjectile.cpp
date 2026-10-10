@@ -4,6 +4,7 @@
 #include "DownstreamExpeditionSubsystem.h"
 #include "DownstreamPrototypeTuning.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Engine/StaticMesh.h"
@@ -72,6 +73,14 @@ void ADownstreamProjectile::Launch(const FVector& Direction, float Damage, float
 void ADownstreamProjectile::OnOverlap(UPrimitiveComponent*, AActor* OtherActor, UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
     if (bConsumed || OtherActor == GetOwner() || OtherActor == GetInstigator()) return;
+    // Hostile fire hurts working robots; they are plain actors with their own TakeDamage.
+    if (!bFromPlayer && OtherActor && OtherActor->ActorHasTag(TEXT("DownstreamRobot")))
+    {
+        bConsumed = true;
+        UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), GetOwner(), nullptr);
+        Destroy();
+        return;
+    }
     auto* Target = Cast<ADownstreamCombatCharacter>(OtherActor);
     if (!Target || !downstream::CanDamage(bFromPlayer, Target->IsPlayerCombatant(), Target->IsDead(), false)) return;
     bConsumed = true;
@@ -84,6 +93,9 @@ void ADownstreamProjectile::OnHit(UPrimitiveComponent*, AActor* OtherActor, UPri
     if (!bConsumed && OtherActor != GetOwner() && OtherActor != GetInstigator())
     {
         bConsumed = true;
+        // Player fire chips at Dam Cult structures (flooding is the efficient way).
+        if (bFromPlayer && OtherActor && OtherActor->ActorHasTag(TEXT("DownstreamHostileStructure")))
+            UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), GetOwner(), nullptr);
         Destroy();
     }
 }

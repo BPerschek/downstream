@@ -45,13 +45,15 @@ void ADownstreamExtractionPoint::BeginPlay()
 {
     Super::BeginPlay();
     RefreshAppearance();
-    SetActorLocation(UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->HomeLocation);
+    if (const auto* Expedition = UDownstreamExpeditionSubsystem::GetForWorld(this)) SetActorLocation(Expedition->GetHomeLocation());
+    RefreshAppearance();
 }
 
 void ADownstreamExtractionPoint::RefreshAppearance()
 {
     HomeMarker->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder")));
-    const float Radius = UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->HomeRadius;
+    const auto* Expedition = GetWorld() ? UDownstreamExpeditionSubsystem::GetForWorld(this) : nullptr;
+    const float Radius = Expedition ? Expedition->GetHomeRadius() : UDownstreamExpeditionSubsystem::GetTuning(GetWorld())->HomeRadius;
     HomeMarker->SetRelativeScale3D(FVector(FMath::Max(1.0f, Radius) / 50.0f, FMath::Max(1.0f, Radius) / 50.0f, 0.08f));
     const TCHAR* Package = TEXT("/Game/Downstream/Materials/M_PrototypeHome");
     if (FPackageName::DoesPackageExist(Package))

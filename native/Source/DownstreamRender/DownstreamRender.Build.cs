@@ -9,6 +9,6 @@ public class DownstreamRender : ModuleRules
         {
             "Core", "CoreUObject", "Engine", "Downstream", "DownstreamSim", "DownstreamColony", "DownstreamCombat", "ProceduralMeshComponent"
         });
-        PrivateDependencyModuleNames.Add("InputCore");
+        PrivateDependencyModuleNames.AddRange(new string[] { "InputCore", "Slate", "SlateCore" });
     }
 }

@@ -70,6 +70,9 @@ public:
     double LowerGround(int x, int y, float amount, float floor);
     double RaiseGround(int x, int y, float amount, float ceiling);
 
+    // Removes up to Volume m^3 from a cell (pumps, drains). Counted as sunk. Returns removed volume.
+    double RemoveWater(int x, int y, double volume);
+
     // Sources add volume each second; sinks remove all water that reaches them.
     void SetSource(int x, int y, float cubicMetresPerSecond);
     float Source(int x, int y) const;

@@ -1,6 +1,8 @@
 #include "DownstreamExpeditionSubsystem.h"
 #include "DownstreamPrototypeTuning.h"
 #include "DownstreamSalvagePickup.h"
+#include "DownstreamSessionSubsystem.h"
+#include "DownstreamWaterSubsystem.h"
 
 #include "Components/PrimitiveComponent.h"
 #include "Dom/JsonObject.h"
@@ -24,15 +26,15 @@ DEFINE_LOG_CATEGORY_STATIC(LogDownstreamExpedition, Log, All);
 
 namespace
 {
+bool GWorldSavePath = false;
 FString SavePath()
 {
-    FString OverrideDirectory;
-    if (FParse::Value(FCommandLine::Get(), TEXT("DownstreamSaveDir="), OverrideDirectory)
-        && !OverrideDirectory.IsEmpty() && !FPaths::IsRelative(OverrideDirectory))
-    {
-        return FPaths::Combine(OverrideDirectory, TEXT("prototype-save.json"));
-    }
-    return FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Downstream/prototype-save.json"));
+    return GWorldSavePath ? UDownstreamSessionSubsystem::WorldSavePath() : UDownstreamSessionSubsystem::ClassicSavePath();
+}
+
+bool IsWorldMap(const UWorld* World)
+{
+    return World && World->GetMapName().Contains(TEXT("M2_World"));
 }
 
 downstream::SettlementRules SettlementRules(const UDownstreamPrototypeTuning* Tuning)
@@ -108,7 +110,37 @@ bool ParseEarthworks(const TSharedPtr<FJsonObject>& Object, downstream::Earthwor
         }
         Deltas.push_back({Parts[0], Parts[1], Parts[2]});
     }
-    return Out.LoadPersisted(bDigger, bVault, Deltas);
+    if (!Out.LoadPersisted(bDigger, bVault, Deltas)) return false;
+    // Schema 4 world fields (optional): seed, every opened vault and outpost destruction masks.
+    double SeedNumber = 0.0;
+    const bool bHasSeed = (*Earth)->HasTypedField<EJson::Number>(TEXT("seed")) && (*Earth)->TryGetNumberField(TEXT("seed"), SeedNumber);
+    const TArray<TSharedPtr<FJsonValue>>* VaultIds = nullptr;
+    const TArray<TSharedPtr<FJsonValue>>* Masks = nullptr;
+    (*Earth)->TryGetArrayField(TEXT("vaults_opened"), VaultIds);
+    (*Earth)->TryGetArrayField(TEXT("outposts"), Masks);
+    if (!bHasSeed && !VaultIds && !Masks) return true;
+    if (bHasSeed && (!FMath::IsFinite(SeedNumber) || SeedNumber < 0.0 || SeedNumber > 4294967295.0 || FMath::FloorToDouble(SeedNumber) != SeedNumber)) return false;
+    std::vector<int> Opened;
+    if (VaultIds)
+        for (const auto& Value : *VaultIds)
+        {
+            double Number = 0.0;
+            if (!Value.IsValid() || Value->Type != EJson::Number || !Value->TryGetNumber(Number) || FMath::FloorToDouble(Number) != Number) return false;
+            Opened.push_back(static_cast<int>(Number));
+        }
+    if (bVault && std::find(Opened.begin(), Opened.end(), 0) == Opened.end()) Opened.push_back(0);
+    std::vector<std::pair<int, int>> MaskPairs;
+    if (Masks)
+        for (const auto& Value : *Masks)
+        {
+            const TArray<TSharedPtr<FJsonValue>>* Pair = nullptr;
+            double A = 0.0, B = 0.0;
+            if (!Value.IsValid() || !Value->TryGetArray(Pair) || !Pair || Pair->Num() != 2
+                || !(*Pair)[0]->TryGetNumber(A) || !(*Pair)[1]->TryGetNumber(B)
+                || FMath::FloorToDouble(A) != A || FMath::FloorToDouble(B) != B) return false;
+            MaskPairs.push_back({static_cast<int>(A), static_cast<int>(B)});
+        }
+    return Out.LoadWorld(static_cast<std::uint32_t>(SeedNumber), Opened, MaskPairs);
 }
 
 bool ParseSave(const FString& Json, downstream::ExpeditionState& Candidate,
@@ -120,7 +152,7 @@ bool ParseSave(const FString& Json, downstream::ExpeditionState& Candidate,
     int32 Version = 0;
     int32 Banked = 0;
     FString Skill;
-    if (!TryInteger(Object, TEXT("version"), Version) || (Version < 1 || Version > 3)
+    if (!TryInteger(Object, TEXT("version"), Version) || (Version < 1 || Version > 4)
         || !TryInteger(Object, TEXT("banked_salvage"), Banked) || Banked < 0
         || !Object->HasTypedField<EJson::String>(TEXT("selected_skill"))
         || !Object->TryGetStringField(TEXT("selected_skill"), Skill)) return false;
@@ -184,7 +216,99 @@ void UDownstreamExpeditionSubsystem::Initialize(FSubsystemCollectionBase& Collec
     Settlement = downstream::SettlementState(SettlementRules(Tuning));
     Earthworks = downstream::EarthworksState();
     Earthworks.SetDiggerCost(Tuning->DiggerCost);
-    LoadSave();
+    bWorldMode = IsWorldMap(GetWorld());
+    GWorldSavePath = bWorldMode;
+    if (!bWorldMode)
+    {
+        LoadSave();
+        return;
+    }
+    // World map: the menu (or -DownstreamWorldSeed=N) decides between a new world and the saved one.
+    uint32 NewSeed = 0;
+    EDownstreamStartMode Mode = EDownstreamStartMode::ContinueWorld;
+    if (auto* Session = GetWorld()->GetGameInstance() ? GetWorld()->GetGameInstance()->GetSubsystem<UDownstreamSessionSubsystem>() : nullptr)
+    {
+        const EDownstreamStartMode Pending = Session->ConsumeStartMode(NewSeed);
+        if (Pending != EDownstreamStartMode::None) Mode = Pending;
+    }
+    int64 CommandSeed = 0;
+    if (FParse::Value(FCommandLine::Get(), TEXT("DownstreamWorldSeed="), CommandSeed) && CommandSeed > 0)
+    {
+        Mode = EDownstreamStartMode::NewWorld;
+        NewSeed = static_cast<uint32>(CommandSeed);
+    }
+    if (Mode != EDownstreamStartMode::NewWorld)
+    {
+        LoadSave();
+        if (!bSaveBlocked && Earthworks.GetSeed() != 0)
+        {
+            SetStatus(FString::Printf(TEXT("Frontier %u loaded. Your dug terrain, buildings and razed outposts persist."), Earthworks.GetSeed()));
+            return;
+        }
+        if (bSaveBlocked) return;
+        NewSeed = static_cast<uint32>(FMath::RandRange(1, 999999));
+    }
+    // A fresh frontier: everything starts empty except the seed, which is saved at once.
+    State = downstream::ExpeditionState(Tuning->InventoryCapacity);
+    Settlement = downstream::SettlementState(SettlementRules(Tuning));
+    Earthworks = downstream::EarthworksState();
+    Earthworks.SetDiggerCost(Tuning->DiggerCost);
+    Earthworks.SetSeed(NewSeed == 0 ? 1 : NewSeed);
+    bSaveBlocked = false;
+    WriteSave(State, Settlement, Earthworks);
+    SetStatus(FString::Printf(TEXT("New frontier, seed %u. Loot caches, bank at home, build up. Dam Cult outposts sit below the rivers..."), Earthworks.GetSeed()));
+}
+
+FVector UDownstreamExpeditionSubsystem::GetHomeLocation() const
+{
+    if (bLayoutOverride) return HomeOverride;
+    if (bWorldMode)
+        if (auto* Water = UDownstreamWaterSubsystem::GetForWorld(const_cast<UDownstreamExpeditionSubsystem*>(this)))
+            if (Water->EnsureWorldActive() && bLayoutOverride) return HomeOverride;
+    return GetTuning(GetWorld())->HomeLocation;
+}
+
+float UDownstreamExpeditionSubsystem::GetHomeRadius() const
+{
+    return bLayoutOverride ? HomeRadiusOverride : GetTuning(GetWorld())->HomeRadius;
+}
+
+FVector UDownstreamExpeditionSubsystem::GetBuildGridCenter() const
+{
+    if (!bLayoutOverride && bWorldMode) GetHomeLocation();
+    return bLayoutOverride ? GridCenterOverride : GetTuning(GetWorld())->BuildGridCenter;
+}
+
+void UDownstreamExpeditionSubsystem::SetLayoutOverride(const FVector& Home, float Radius, const FVector& GridCenter)
+{
+    bLayoutOverride = !Home.ContainsNaN() && !GridCenter.ContainsNaN() && FMath::IsFinite(Radius) && Radius > 0.0f;
+    HomeOverride = Home;
+    HomeRadiusOverride = Radius;
+    GridCenterOverride = GridCenter;
+}
+
+bool UDownstreamExpeditionSubsystem::TrySpendBanked(int32 Amount, const FString& Reason)
+{
+    if (Amount <= 0) return true;
+    auto Candidate = State;
+    if (!Candidate.SpendBanked(Amount))
+    {
+        SetStatus(FString::Printf(TEXT("%s needs %d banked salvage."), *Reason, Amount));
+        return false;
+    }
+    if (!WriteSave(Candidate, Settlement, Earthworks)) return false;
+    State = Candidate;
+    SetStatus(FString::Printf(TEXT("%s: spent %d salvage."), *Reason, Amount));
+    return true;
+}
+
+bool UDownstreamExpeditionSubsystem::DevGrantSalvage(int32 Amount)
+{
+    auto Candidate = State;
+    if (Amount <= 0 || !Candidate.AddBanked(Amount) || !WriteSave(Candidate, Settlement, Earthworks)) return false;
+    State = Candidate;
+    SetStatus(FString::Printf(TEXT("Developer: +%d banked salvage (now %d)."), Amount, State.GetBankedSalvage()));
+    return true;
 }
 
 UDownstreamExpeditionSubsystem* UDownstreamExpeditionSubsystem::GetForWorld(UObject* ContextObject)
@@ -250,10 +374,11 @@ int32 UDownstreamExpeditionSubsystem::GetStructureCost(EDownstreamStructureType 
 bool UDownstreamExpeditionSubsystem::TryGetBuildCell(FVector Location, FIntPoint& Cell) const
 {
     const auto* Tuning = GetTuning(GetWorld());
-    if (Location.ContainsNaN() || Tuning->BuildGridCenter.ContainsNaN()
+    const FVector Center = GetBuildGridCenter();
+    if (Location.ContainsNaN() || Center.ContainsNaN()
         || !FMath::IsFinite(Tuning->BuildGridCellSize) || Tuning->BuildGridCellSize <= 0.0f) return false;
-    const double X = FMath::FloorToDouble((Location.X - Tuning->BuildGridCenter.X) / Tuning->BuildGridCellSize + 0.5);
-    const double Y = FMath::FloorToDouble((Location.Y - Tuning->BuildGridCenter.Y) / Tuning->BuildGridCellSize + 0.5);
+    const double X = FMath::FloorToDouble((Location.X - Center.X) / Tuning->BuildGridCellSize + 0.5);
+    const double Y = FMath::FloorToDouble((Location.Y - Center.Y) / Tuning->BuildGridCellSize + 0.5);
     if (!FMath::IsFinite(X) || !FMath::IsFinite(Y) || X < MIN_int32 || X > MAX_int32 || Y < MIN_int32 || Y > MAX_int32) return false;
     Cell = FIntPoint(static_cast<int32>(X), static_cast<int32>(Y));
     return true;
@@ -262,14 +387,14 @@ bool UDownstreamExpeditionSubsystem::TryGetBuildCell(FVector Location, FIntPoint
 FVector UDownstreamExpeditionSubsystem::GetBuildCellWorldLocation(FIntPoint Cell) const
 {
     const auto* Tuning = GetTuning(GetWorld());
-    return Tuning->BuildGridCenter + FVector(Cell.X * static_cast<double>(Tuning->BuildGridCellSize),
+    return GetBuildGridCenter() + FVector(Cell.X * static_cast<double>(Tuning->BuildGridCellSize),
         Cell.Y * static_cast<double>(Tuning->BuildGridCellSize), 0.0);
 }
 
 FVector UDownstreamExpeditionSubsystem::GetSnappedBuildLocation(FVector Location) const
 {
     FIntPoint Cell;
-    return TryGetBuildCell(Location, Cell) ? GetBuildCellWorldLocation(Cell) : GetTuning(GetWorld())->BuildGridCenter;
+    return TryGetBuildCell(Location, Cell) ? GetBuildCellWorldLocation(Cell) : GetBuildGridCenter();
 }
 
 bool UDownstreamExpeditionSubsystem::CanPlaceStructure(EDownstreamStructureType Type, FVector Location) const
@@ -353,18 +478,28 @@ bool UDownstreamExpeditionSubsystem::TryConstructDigger(AActor* Player)
     return true;
 }
 
-bool UDownstreamExpeditionSubsystem::CommitVaultOpened()
+bool UDownstreamExpeditionSubsystem::CommitVaultOpened(int32 VaultId)
 {
     auto CandidateEarthworks = Earthworks;
-    if (!CandidateEarthworks.OpenVault() || !WriteSave(State, Settlement, CandidateEarthworks)) return false;
+    if (!CandidateEarthworks.OpenVault(VaultId) || !WriteSave(State, Settlement, CandidateEarthworks)) return false;
     Earthworks = CandidateEarthworks;
     return true;
 }
 
-bool UDownstreamExpeditionSubsystem::CommitEarthworksTerrain(const downstream::WaterGrid& Grid)
+bool UDownstreamExpeditionSubsystem::CommitOutpostMask(int32 OutpostId, int32 Mask)
+{
+    if (Earthworks.GetOutpostMask(OutpostId) == Mask) return true;
+    auto CandidateEarthworks = Earthworks;
+    CandidateEarthworks.SetOutpostMask(OutpostId, Mask);
+    if (!WriteSave(State, Settlement, CandidateEarthworks)) return false;
+    Earthworks = CandidateEarthworks;
+    return true;
+}
+
+bool UDownstreamExpeditionSubsystem::CommitEarthworksTerrain(const downstream::WaterGrid& Grid, const std::vector<float>& BaseGround)
 {
     auto CandidateEarthworks = Earthworks;
-    CandidateEarthworks.CaptureTerrain(Grid);
+    CandidateEarthworks.CaptureTerrain(Grid, BaseGround);
     if (CandidateEarthworks.GetTerrain().size() == Earthworks.GetTerrain().size()
         && std::equal(CandidateEarthworks.GetTerrain().begin(), CandidateEarthworks.GetTerrain().end(), Earthworks.GetTerrain().begin(),
             [](const downstream::TerrainDelta& A, const downstream::TerrainDelta& B) { return A.X == B.X && A.Y == B.Y && A.HeightMm == B.HeightMm; }))
@@ -508,8 +643,8 @@ bool UDownstreamExpeditionSubsystem::ChooseStarterSkill(FName SkillId)
 bool UDownstreamExpeditionSubsystem::IsAtHome(FVector Location) const
 {
     const auto* Tuning = GetTuning(GetWorld());
-    return !Location.ContainsNaN() && FVector::DistSquared2D(Location, Tuning->HomeLocation)
-        <= FMath::Square(FMath::Max(0.0f, Tuning->HomeRadius));
+    return !Location.ContainsNaN() && FVector::DistSquared2D(Location, GetHomeLocation())
+        <= FMath::Square(FMath::Max(0.0f, GetHomeRadius()));
 }
 
 bool UDownstreamExpeditionSubsystem::TryInteract(AActor* Player)
@@ -558,7 +693,7 @@ bool UDownstreamExpeditionSubsystem::TryInteract(AActor* Player)
         if (!WriteSave(Candidate, Settlement)) return false;
         State = Candidate;
         const auto* Tuning = GetTuning(GetWorld());
-        if (Tuning->ExtractionSound) UGameplayStatics::PlaySoundAtLocation(Player, Tuning->ExtractionSound, Tuning->HomeLocation);
+        if (Tuning->ExtractionSound) UGameplayStatics::PlaySoundAtLocation(Player, Tuning->ExtractionSound, GetHomeLocation());
         SetStatus(FString::Printf(TEXT("Extracted %d salvage. Stash saved: %d."), Amount, State.GetBankedSalvage()));
         return true;
     }
@@ -662,7 +797,7 @@ bool UDownstreamExpeditionSubsystem::WriteSave(const downstream::ExpeditionState
     };
     if (!Files.MakeDirectory(*FPaths::GetPath(Path), true)) return Fail();
     TSharedRef<FJsonObject> Object = MakeShared<FJsonObject>();
-    Object->SetNumberField(TEXT("version"), 3);
+    Object->SetNumberField(TEXT("version"), 4);
     Object->SetNumberField(TEXT("banked_salvage"), Candidate.GetBankedSalvage());
     Object->SetStringField(TEXT("selected_skill"), UTF8_TO_TCHAR(Candidate.GetSelectedSkillId().c_str()));
     TArray<TSharedPtr<FJsonValue>> Structures;
@@ -694,6 +829,19 @@ bool UDownstreamExpeditionSubsystem::WriteSave(const downstream::ExpeditionState
         Cells.Add(MakeShared<FJsonValueArray>(Triple));
     }
     Earth->SetArrayField(TEXT("terrain_mm"), Cells);
+    Earth->SetNumberField(TEXT("seed"), static_cast<double>(CandidateEarthworks.GetSeed()));
+    TArray<TSharedPtr<FJsonValue>> OpenedVaults;
+    for (int Id : CandidateEarthworks.GetOpenedVaults()) OpenedVaults.Add(MakeShared<FJsonValueNumber>(Id));
+    Earth->SetArrayField(TEXT("vaults_opened"), OpenedVaults);
+    TArray<TSharedPtr<FJsonValue>> OutpostMasks;
+    for (const auto& Mask : CandidateEarthworks.GetOutpostMasks())
+    {
+        TArray<TSharedPtr<FJsonValue>> Pair;
+        Pair.Add(MakeShared<FJsonValueNumber>(Mask.first));
+        Pair.Add(MakeShared<FJsonValueNumber>(Mask.second));
+        OutpostMasks.Add(MakeShared<FJsonValueArray>(Pair));
+    }
+    Earth->SetArrayField(TEXT("outposts"), OutpostMasks);
     Object->SetObjectField(TEXT("earthworks"), Earth);
     FString Json;
     if (!FJsonSerializer::Serialize(Object, TJsonWriterFactory<>::Create(&Json))
