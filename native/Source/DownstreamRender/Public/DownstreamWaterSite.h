@@ -7,6 +7,7 @@
 class UInstancedStaticMeshComponent;
 class UMaterialInterface;
 class UProceduralMeshComponent;
+class UDownstreamTerrainMeshComponent;
 class UStaticMeshComponent;
 class UTextRenderComponent;
 namespace downstream { class WaterGrid; }
@@ -23,7 +24,7 @@ public:
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void Tick(float DeltaSeconds) override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UProceduralMeshComponent> TerrainMesh;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UDownstreamTerrainMeshComponent> TerrainMesh;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UProceduralMeshComponent> WaterMesh;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UInstancedStaticMeshComponent> PlanMarkers;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UInstancedStaticMeshComponent> QueueMarkers;
@@ -31,6 +32,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UStaticMeshComponent> CulvertPipe;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UTextRenderComponent> CulvertLabel;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UTextRenderComponent> SpringLabel;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UStaticMeshComponent> WaterTower;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Water") TObjectPtr<UStaticMeshComponent> CulvertSign;
+    UFUNCTION(BlueprintPure, Category="Downstream|Water") int32 GetNavigationTriangleCount() const;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Downstream|Water") TObjectPtr<UMaterialInterface> TerrainMaterial;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Downstream|Water") TObjectPtr<UMaterialInterface> WaterMaterial;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Downstream|Water") TObjectPtr<UMaterialInterface> ValidMarkerMaterial;

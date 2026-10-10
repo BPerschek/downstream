@@ -1,0 +1,3 @@
+All ambientCG assets are provided under the Creative Commons CC0 1.0 Universal License.
+https://creativecommons.org/publicdomain/zero/1.0/
+Source statement: https://docs.ambientcg.com/license/ (retrieved 2026-10-09). Attribution optional: "Textures from ambientCG.com, CC0."

@@ -25,8 +25,12 @@ def tick(dt):
         if state['stage'] == 'spawn' and now - state['t'] > 3:
             for e in unreal.GameplayStatics.get_all_actors_of_class(world, unreal.DownstreamEnemy):
                 e.set_actor_tick_enabled(False)
-            cell = unreal.IntPoint(10, 13) if mode == 'flooded' else unreal.IntPoint(11, 6)
-            pawn.set_actor_location(water.cell_to_world(cell) + unreal.Vector(0, 0, 120), False, True)
+            spots = {'home': unreal.Vector(-1550, -500, 120), 'ruin': unreal.Vector(1400, 650, 120)}
+            if mode in spots:
+                pawn.set_actor_location(spots[mode], False, True)
+            else:
+                cell = unreal.IntPoint(10, 13) if mode == 'flooded' else unreal.IntPoint(11, 6)
+                pawn.set_actor_location(water.cell_to_world(cell) + unreal.Vector(0, 0, 120), False, True)
             if mode == 'planning':
                 pawn.toggle_dig_planner()
             state.update(stage='settle', t=now)

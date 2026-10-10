@@ -1,0 +1,20 @@
+{
+  "title": "City Kit Industrial 2.0",
+  "creator": "Kenney (kenney.nl)",
+  "license": "CC0 1.0 Universal (vendor License.txt retained unchanged)",
+  "source_archive": "https://kenney.nl/media/pages/assets/city-kit-industrial/0ec35b139d-1788171848/kenney_city-kit-industrial_2.0.zip",
+  "archive_sha256": "5b381164e5760f3830a2dbee43b972deee38b2a695d091b56e238ab2910c96d2",
+  "archive_bytes": 5045077,
+  "acquired": "2026-10-09",
+  "selected_files_sha256": {
+    "License.txt": "60a8c5c31191256ec9779dc18745dea6d69c46f4b29703459ce064c1765a59ea",
+    "Models/chimney-medium.glb": "ef1605601d85b5fff97d6596b6552d936a1d6be06ec0609242f6bcfb640d91f6",
+    "Models/detail-tank-large.glb": "2fbf65dfbae114235dec65cc8730a870cf7d29dd76f9473218e96ee83e9f5f43",
+    "Models/detail-tank.glb": "9e955732e4ef9ccff4a4d6967d29d8a7d2f9ed16c903923f2568216d9f0b50d2",
+    "Models/shipping-container-a.glb": "7b2d5ca874c8e659ee6cfd1614f0470b70410b2ddc7620ac83b8954dedeb861d",
+    "Models/shipping-container-b.glb": "290b3808149f8a9456ee96ff682fcf6a99f76adeac8e3b7b38234be434ea455c",
+    "Models/solar-panel-landscape-group.glb": "451623ce9feedbcc99bf0d9e4b372c34e1704acbb847ef8574994867b30b085c",
+    "Models/water-tower.glb": "11ac7ae19f32ce889bfe7a9c8e78c8ce8c77b7a76b52fd4ffa439a022ea2ef40",
+    "Models/Textures/colormap.png": "950f4f891ebd05a2affac810e6eeb0fea1511bc39039b65a3cbf2e17d17bc6a2"
+  }
+}

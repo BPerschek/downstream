@@ -1,0 +1,14 @@
+{
+  "title": "Space Kit 2.0",
+  "creator": "Kenney (kenney.nl)",
+  "license": "CC0 1.0 Universal (vendor License.txt retained unchanged)",
+  "source_archive": "https://kenney.nl/media/pages/assets/space-kit/20874c75ac-1677698978/kenney_space-kit.zip",
+  "archive_sha256": "d5d7cdf2635ed5a43a9187deaf409b6f47484e402321128341d3c3698e9ef4d9",
+  "archive_bytes": 6677531,
+  "acquired": "2026-10-09",
+  "selected_files_sha256": {
+    "License.txt": "bd4e050e69d41351282c4d53f943cd4d80a80b968593e60653ba5292637941b7",
+    "Models/rover.glb": "9784549775017e540ab84e6fc0eb8a1902dbeff9ba4285cecb97c086d2937fa5",
+    "Models/turret_single.glb": "ef27f43718c846297f90a0b20446b13c6a1f092cd995ea730f27d6e003efd1e0"
+  }
+}

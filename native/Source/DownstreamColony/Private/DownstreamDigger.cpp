@@ -85,23 +85,27 @@ void ADownstreamDigger::BeginPlay()
     if (!GetController()) SpawnDefaultController();
     const auto* Tuning = UDownstreamExpeditionSubsystem::GetTuning(GetWorld());
     GetCharacterMovement()->MaxWalkSpeed = FMath::Max(1.0f, Tuning->DiggerMoveSpeed);
-    UStaticMesh* Robot = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/Art/SM_SalvageBot"));
+    // CC0 Kenney Space Kit rover; the original salvage bot is the fallback.
+    UStaticMesh* Robot = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/ThirdParty/Kenney/Space/rover/SM_K_rover"));
+    const bool bRover = Robot != nullptr;
+    if (!Robot) Robot = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/Art/SM_SalvageBot"));
     if (!Robot) Robot = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
     BotMesh->SetStaticMesh(Robot);
     if (Robot)
     {
         const auto Bounds = Robot->GetBounds();
         const FVector Size = Bounds.BoxExtent * 2.0f;
-        const float Scale = FMath::Min(95.0f / FMath::Max(1.0f, FMath::Max(Size.X, Size.Y)), 100.0f / FMath::Max(1.0f, Size.Z));
+        const float Scale = FMath::Min(115.0f / FMath::Max(1.0f, FMath::Max(Size.X, Size.Y)), 110.0f / FMath::Max(1.0f, Size.Z));
         BotMesh->SetRelativeScale3D(FVector(Scale));
-        BotMesh->SetRelativeRotation(FRotator(0, 90, 0));
+        BotMesh->SetRelativeRotation(FRotator(0, bRover ? 0 : 90, 0));
         BotMesh->SetRelativeLocation(FVector(Bounds.Origin.Y * Scale, -Bounds.Origin.X * Scale, -58.0f - (Bounds.Origin.Z - Bounds.BoxExtent.Z) * Scale));
     }
     Scoop->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube")));
     if (auto* Orange = LoadIfPresent<UMaterialInterface>(TEXT("/Game/Downstream/Materials/M_PrototypeRecovery")))
     {
         Scoop->SetMaterial(0, Orange);
-        for (int32 Index = 0; Index < BotMesh->GetNumMaterials(); ++Index) BotMesh->SetMaterial(Index, Orange);
+        // The rover keeps its own palette; only the fallback bot is tinted.
+        if (!bRover) for (int32 Index = 0; Index < BotMesh->GetNumMaterials(); ++Index) BotMesh->SetMaterial(Index, Orange);
     }
     ProgressLocation = GetActorLocation();
     LastProgressTime = GetWorld()->GetTimeSeconds();

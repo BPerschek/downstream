@@ -2,6 +2,7 @@
 
 #include "DownstreamDebugHUD.h"
 #include "DownstreamPlayerCharacter.h"
+#include "DownstreamTerrainMeshComponent.h"
 #include "DownstreamEarthworks.h"
 #include "DownstreamWater.h"
 #include "DownstreamWaterSubsystem.h"
@@ -52,7 +53,7 @@ FLinearColor GroundColor(float Height, float Base)
 ADownstreamWaterSite::ADownstreamWaterSite()
 {
     PrimaryActorTick.bCanEverTick = true;
-    TerrainMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("TerrainMesh"));
+    TerrainMesh = CreateDefaultSubobject<UDownstreamTerrainMeshComponent>(TEXT("TerrainMesh"));
     SetRootComponent(TerrainMesh);
     TerrainMesh->bUseComplexAsSimpleCollision = true;
     TerrainMesh->SetCollisionProfileName(TEXT("BlockAll"));
@@ -84,6 +85,14 @@ ADownstreamWaterSite::ADownstreamWaterSite()
     CulvertPipe->SetupAttachment(TerrainMesh);
     CulvertPipe->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     CulvertPipe->SetCanEverAffectNavigation(false);
+    WaterTower = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WaterTower"));
+    WaterTower->SetupAttachment(TerrainMesh);
+    WaterTower->SetCollisionProfileName(TEXT("BlockAll"));
+    WaterTower->SetCanEverAffectNavigation(true);
+    CulvertSign = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CulvertSign"));
+    CulvertSign->SetupAttachment(TerrainMesh);
+    CulvertSign->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    CulvertSign->SetCanEverAffectNavigation(false);
     CulvertLabel = CreateDefaultSubobject<UTextRenderComponent>(TEXT("CulvertLabel"));
     SpringLabel = CreateDefaultSubobject<UTextRenderComponent>(TEXT("SpringLabel"));
     for (UTextRenderComponent* Text : {CulvertLabel.Get(), SpringLabel.Get()})
@@ -260,6 +269,7 @@ void ADownstreamWaterSite::BuildTerrain(const downstream::WaterGrid& Grid, bool 
         Tangents.Add(FProcMeshTangent((FVector::ForwardVector - N * N.X).GetSafeNormal(), false));
     }
     TerrainMesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UVs, Colors, Tangents, bCollisionAndNavigation);
+    TerrainMesh->SetNavigationGeometry(Vertices, Triangles);
     if (TerrainMaterial) TerrainMesh->SetMaterial(0, TerrainMaterial);
     ++TerrainRebuilds;
     // Dirty only this component's bounds for navigation instead of a global rebuild.
@@ -328,21 +338,66 @@ void ADownstreamWaterSite::BuildWater(const downstream::WaterGrid& Grid)
     ++WaterRebuilds;
 }
 
+int32 ADownstreamWaterSite::GetNavigationTriangleCount() const
+{
+    return TerrainMesh ? TerrainMesh->GetNavigationTriangleCount() : 0;
+}
+
 void ADownstreamWaterSite::PlaceDecor(const downstream::WaterGrid& Grid)
 {
     using Site = downstream::DrownedVaultSite;
     const float S = Grid.Config().CellSize * MetresToCm;
     auto* Cylinder = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     auto* Concrete = LoadIfPresent<UMaterialInterface>(TEXT("/Game/Downstream/Materials/M_SiteConcrete"));
-    SpringPipe->SetStaticMesh(Cylinder);
-    SpringPipe->SetRelativeLocation(FVector((Site::Spring.X + 1.2f) * S, (Site::Spring.Y + 0.5f) * S, Grid.Ground(Site::Spring.X, Site::Spring.Y) * MetresToCm + 35.0f));
-    SpringPipe->SetRelativeRotation(FRotator(0, 0, 90));
-    SpringPipe->SetRelativeScale3D(FVector(0.7f, 0.7f, 1.6f));
-    CulvertPipe->SetStaticMesh(Cylinder);
-    CulvertPipe->SetRelativeLocation(FVector((Site::CulvertA.X + 1.0f) * S, -20.0f, 45.0f));
-    CulvertPipe->SetRelativeRotation(FRotator(0, 0, 90));
-    CulvertPipe->SetRelativeScale3D(FVector(1.9f, 1.9f, 0.9f));
-    if (Concrete) { SpringPipe->SetMaterial(0, Concrete); CulvertPipe->SetMaterial(0, Concrete); }
+    // CC0 Kenney Factory/Industrial Kit models (third_party/kenney-*), with primitive fallbacks.
+    auto* Valve = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/ThirdParty/Kenney/Factory/pipe_large_valve/SM_K_pipe_large_valve"));
+    auto* LongPipe = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/ThirdParty/Kenney/Factory/pipe_large_long/SM_K_pipe_large_long"));
+    auto* Tower = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/ThirdParty/Kenney/Industrial/water_tower/SM_K_water_tower"));
+    auto* Sign = LoadIfPresent<UStaticMesh>(TEXT("/Game/Downstream/ThirdParty/Kenney/Factory/warning_traffic/SM_K_warning_traffic"));
+    const float SpringGround = Grid.Ground(Site::Spring.X, Site::Spring.Y) * MetresToCm;
+    if (Valve)
+    {
+        SpringPipe->SetStaticMesh(Valve);
+        SpringPipe->SetRelativeLocation(FVector((Site::Spring.X + 1.3f) * S, (Site::Spring.Y + 0.5f) * S, SpringGround - 15.0f));
+        SpringPipe->SetRelativeRotation(FRotator::ZeroRotator);
+        SpringPipe->SetRelativeScale3D(FVector(1.1f));
+    }
+    else
+    {
+        SpringPipe->SetStaticMesh(Cylinder);
+        SpringPipe->SetRelativeLocation(FVector((Site::Spring.X + 1.2f) * S, (Site::Spring.Y + 0.5f) * S, SpringGround + 35.0f));
+        SpringPipe->SetRelativeRotation(FRotator(0, 0, 90));
+        SpringPipe->SetRelativeScale3D(FVector(0.7f, 0.7f, 1.6f));
+        if (Concrete) SpringPipe->SetMaterial(0, Concrete);
+    }
+    if (LongPipe)
+    {
+        // Half-buried culvert running out of the south edge of the site.
+        CulvertPipe->SetStaticMesh(LongPipe);
+        CulvertPipe->SetRelativeLocation(FVector((Site::CulvertA.X + 1.0f) * S, -60.0f, -45.0f));
+        CulvertPipe->SetRelativeRotation(FRotator(0, 90, 0));
+        CulvertPipe->SetRelativeScale3D(FVector(1.0f, 1.5f, 1.5f));
+    }
+    else
+    {
+        CulvertPipe->SetStaticMesh(Cylinder);
+        CulvertPipe->SetRelativeLocation(FVector((Site::CulvertA.X + 1.0f) * S, -20.0f, 45.0f));
+        CulvertPipe->SetRelativeRotation(FRotator(0, 0, 90));
+        CulvertPipe->SetRelativeScale3D(FVector(1.9f, 1.9f, 0.9f));
+        if (Concrete) CulvertPipe->SetMaterial(0, Concrete);
+    }
+    if (Tower)
+    {
+        WaterTower->SetStaticMesh(Tower);
+        WaterTower->SetRelativeLocation(FVector(29.5f * S, 14.0f * S, Site::Plateau * MetresToCm));
+        WaterTower->SetRelativeScale3D(FVector(3.2f));
+    }
+    if (Sign)
+    {
+        CulvertSign->SetStaticMesh(Sign);
+        CulvertSign->SetRelativeLocation(FVector((Site::CulvertB.X + 2.6f) * S, 1.6f * S, 1.2f * MetresToCm));
+        CulvertSign->SetRelativeScale3D(FVector(1.0f));
+    }
     CulvertLabel->SetRelativeLocation(FVector((Site::CulvertA.X + 1.0f) * S, 60.0f, 330.0f));
     SpringLabel->SetRelativeLocation(FVector((Site::Spring.X + 0.5f) * S, (Site::Spring.Y + 0.5f) * S, 420.0f));
     CulvertLabel->SetWorldRotation(FRotator(55, -135, 0));

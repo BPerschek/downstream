@@ -48,6 +48,10 @@ The 17 standalone simulation tests, expedition economy suite and all eight nativ
 
 ![Drowned Vault after the digger's canal: graded trench with spoil berms, drained basin, opened vault](docs/images/Downstream_Water_drained.png)
 
+![Home settlement with Kenney CC0 props: solar-panel charger, metal-shed workshop, container storage, fortified fence](docs/images/Downstream_Water_home.png)
+
+![Industrial ruin dressed with CC0 shipping containers, tanks, barrels and crates](docs/images/Downstream_Water_ruin.png)
+
 Water/settlement evidence: [2026-10-09-water-results.json](docs/validation/2026-10-09-water-results.json).
 
 This is an early gameplay slice. One settlement, two robot roles and one water site exist; factions, a full skill tree, broader persistent world entities, more water structures (gates, dams, pumps), weather and endgame progression remain future work. Actor/Mass comparison, worker-thread snapshots and a packaged RTX 5050 / 1080p / 60 FPS benchmark are also open.
@@ -78,6 +82,8 @@ On another machine, install compatible Unreal 5.8 and Visual Studio C++ tools/Wi
 Committed maps/assets can be played without regeneration. Rebuild original meshes with Blender 5.2 using `art/create_blockouts.py`, then `art/validate_blockouts.py`. `scripts/create_prototype_audio.py` generates four original PCM cues with standard Python. Build native targets before running Unreal Python scripts that use native classes.
 
 For a full base-map rebuild, run `scripts/regenerate_world.ps1`, then `scripts/install_native_layer.py` through Unreal's Python commandlet to attach the terrain station to M0. Finally run `scripts/regenerate_expedition.ps1` to create/update M1 gameplay actors, materials and audio references, and save navigation. M1 copies M0 only on its first creation; later regeneration retains that existing environment. Both map generators replace generated actors. Keep hand-authored variants under another map name. [PLAYABLE_CONCEPT](docs/PLAYABLE_CONCEPT.md) includes the commandlet invocation and sequence.
+
+Open-source art: CC0 models from Kenney (survival, industrial, factory and space kits) and CC0 PBR textures from ambientCG are retained under `third_party/` with licenses and hashes, and imported by `scripts/import_third_party.ps1` (run it before `regenerate_expedition.ps1` on a fresh checkout). Native code falls back to the original blockouts if they are missing.
 
 The nine original meshes retain editable Blender source, FBX exports, palette and validation manifests in `art/`. Epic's mannequin and template resources retain their existing content mounts. [ASSET_LICENSES](ASSET_LICENSES.md) records provenance. The owner-installed AdaptivePathfindingSystem plugin is enabled locally; gameplay uses standard Recast/AIController. If that optional plugin is absent on another machine, disable its project entry before opening/building. Harvest/Ready Map payloads and the separate UE4.27 Shooter Game sample are not dependencies of this level.
 

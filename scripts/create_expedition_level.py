@@ -75,7 +75,7 @@ assert unreal.EditorAssetLibrary.save_loaded_asset(tuning, False)
 
 for actor in actors.get_all_level_actors():
     name = actor.get_actor_label()
-    if name.startswith('M1_') or name.startswith('M3_') or name in ('Robot_AssemblyPreview', 'Label_CLICK GROUND TO MOVE', 'Label_HOME  /  TECHNICAL PROTOTYPE', 'Label_DOWNSTREAM'):
+    if name.startswith(('M1_', 'M3_', 'M4_')) or name in ('Robot_AssemblyPreview', 'Label_CLICK GROUND TO MOVE', 'Label_HOME  /  TECHNICAL PROTOTYPE', 'Label_DOWNSTREAM'):
         actors.destroy_actor(actor)
 
 def spawn(cls, name, pos, yaw=0):
@@ -158,27 +158,63 @@ def sat(mat, a, x, y, a_out=''):
     MEL.connect_material_expressions(a, a_out, expr, '')
     return expr
 
-# Ground: UV0.x = metres dug(-)/piled(+), UV0.y = height (m). Contour bands every 0.5 m.
+# ---- CC0 ambientCG textures (third_party/ambientcg, imported by art/import_third_party.py).
+ACG = '/Game/Downstream/ThirdParty/AmbientCG/'
+def tex(mat, name, uv, x, y, kind='color'):
+    t = unreal.load_asset(ACG + name)
+    assert t, 'Missing texture ' + name + '; run scripts/import_third_party.ps1'
+    sampler = {'color': unreal.MaterialSamplerType.SAMPLERTYPE_COLOR, 'normal': unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL,
+               'linear': unreal.MaterialSamplerType.SAMPLERTYPE_LINEAR_COLOR}[kind]
+    expr = node(mat, unreal.MaterialExpressionTextureSample, x, y, texture=t, sampler_type=sampler)
+    MEL.connect_material_expressions(uv, '', expr, 'UVs')
+    return expr
+def world_uv(mat, tile_cm, x, y):
+    wp = node(mat, unreal.MaterialExpressionWorldPosition, x - 300, y)
+    rg = node(mat, unreal.MaterialExpressionComponentMask, x - 150, y, r=True, g=True, b=False, a=False)
+    MEL.connect_material_expressions(wp, '', rg, '')
+    return op(mat, unreal.MaterialExpressionDivide, rg, const1(mat, tile_cm, x - 150, y + 80), x, y)
+
+def tiled_material(name, prefix, tile_cm, tint=(1, 1, 1)):
+    mat = fresh_material(name)
+    uv = world_uv(mat, tile_cm, -900, 0)
+    color = op(mat, unreal.MaterialExpressionMultiply, tex(mat, prefix + '_Color', uv, -600, -200), const3(mat, tint, -600, -50), -350, -150)
+    MEL.connect_material_property(color, '', unreal.MaterialProperty.MP_BASE_COLOR)
+    MEL.connect_material_property(tex(mat, prefix + '_NormalDX', uv, -600, 100, 'normal'), 'RGB', unreal.MaterialProperty.MP_NORMAL)
+    MEL.connect_material_property(tex(mat, prefix + '_Roughness', uv, -600, 350, 'linear'), 'R', unreal.MaterialProperty.MP_ROUGHNESS)
+    MEL.recompile_material(mat)
+    assert unreal.EditorAssetLibrary.save_loaded_asset(mat, False)
+    return mat
+open_ground_mat = tiled_material('M_OpenGround', 'T_Ground054', 450, (.92, .86, .78))
+concrete_tex_mat = tiled_material('M_ConcretePad', 'T_Concrete034', 300, (.8, .8, .78))
+
+# Site ground: UV0.x = metres dug(-)/piled(+), UV0.y = height (m). Sand on high ground,
+# brown dirt low and in fresh cuts, rocky spoil on berms; contour bands every 0.5 m.
 ground_mat = fresh_material('M_SiteGround')
 uv = node(ground_mat, unreal.MaterialExpressionTextureCoordinate, -1400, 0)
 delta = node(ground_mat, unreal.MaterialExpressionComponentMask, -1200, 0, r=True, g=False, b=False, a=False)
 MEL.connect_material_expressions(uv, '', delta, '')
 height = node(ground_mat, unreal.MaterialExpressionComponentMask, -1200, 150, r=False, g=True, b=False, a=False)
 MEL.connect_material_expressions(uv, '', height, '')
-h01 = sat(ground_mat, op(ground_mat, unreal.MaterialExpressionMultiply, height, const1(ground_mat, 1/1.6, -1200, 260), -1050, 150), -900, 150)
-base = lerp(ground_mat, const3(ground_mat, (.10, .08, .055), -900, -200), const3(ground_mat, (.34, .25, .15), -900, -100), h01, -700, -150)
+wuv = world_uv(ground_mat, 450, -1400, 700)
+sand = op(ground_mat, unreal.MaterialExpressionMultiply, tex(ground_mat, 'T_Ground054_Color', wuv, -1100, 600), const3(ground_mat, (.92, .86, .78), -1100, 760), -900, 620)
+dirt = tex(ground_mat, 'T_Ground103_Color', wuv, -1100, 850)
+rocky = tex(ground_mat, 'T_Ground109_Color', wuv, -1100, 1100)
+h01 = sat(ground_mat, op(ground_mat, unreal.MaterialExpressionMultiply, height, const1(ground_mat, 1/1.4, -1200, 260), -1050, 150), -900, 150)
+base = lerp(ground_mat, dirt, sand, h01, -700, -150)
 dug = sat(ground_mat, op(ground_mat, unreal.MaterialExpressionMultiply, delta, const1(ground_mat, -4, -1200, 60), -1050, 0), -900, 0)
-dug_col = lerp(ground_mat, base, const3(ground_mat, (.20, .11, .05), -700, -40), op(ground_mat, unreal.MaterialExpressionMultiply, dug, const1(ground_mat, .8, -900, 60), -800, 20), -550, -100)
+dark_dirt = op(ground_mat, unreal.MaterialExpressionMultiply, dirt, const1(ground_mat, .7, -900, 900), -800, 880)
+dug_col = lerp(ground_mat, base, dark_dirt, op(ground_mat, unreal.MaterialExpressionMultiply, dug, const1(ground_mat, .85, -900, 60), -800, 20), -550, -100)
 berm = sat(ground_mat, op(ground_mat, unreal.MaterialExpressionMultiply, delta, const1(ground_mat, 4, -1200, 110), -1050, 60), -900, 60)
-berm_col = lerp(ground_mat, dug_col, const3(ground_mat, (.47, .37, .22), -550, 40), op(ground_mat, unreal.MaterialExpressionMultiply, berm, const1(ground_mat, .75, -900, 120), -800, 90), -400, -50)
+berm_col = lerp(ground_mat, dug_col, rocky, op(ground_mat, unreal.MaterialExpressionMultiply, berm, const1(ground_mat, .85, -900, 120), -800, 90), -400, -50)
 frac = node(ground_mat, unreal.MaterialExpressionFrac, -900, 300)
 MEL.connect_material_expressions(op(ground_mat, unreal.MaterialExpressionMultiply, height, const1(ground_mat, 2, -1200, 360), -1050, 300), '', frac, '')
 band = sat(ground_mat, op(ground_mat, unreal.MaterialExpressionMultiply, op(ground_mat, unreal.MaterialExpressionSubtract, const1(ground_mat, .1, -900, 400), frac, -800, 350), const1(ground_mat, 12, -800, 450), -700, 380), -600, 380)
-shade = op(ground_mat, unreal.MaterialExpressionSubtract, const1(ground_mat, 1, -600, 300), op(ground_mat, unreal.MaterialExpressionMultiply, band, const1(ground_mat, .25, -600, 450), -500, 400), -400, 350)
+shade = op(ground_mat, unreal.MaterialExpressionSubtract, const1(ground_mat, 1, -600, 300), op(ground_mat, unreal.MaterialExpressionMultiply, band, const1(ground_mat, .22, -600, 450), -500, 400), -400, 350)
 ground_col = op(ground_mat, unreal.MaterialExpressionMultiply, berm_col, shade, -250, 0)
 MEL.connect_material_property(ground_col, '', unreal.MaterialProperty.MP_BASE_COLOR)
-MEL.connect_material_property(const1(ground_mat, .92, -250, 200), '', unreal.MaterialProperty.MP_ROUGHNESS)
-MEL.connect_material_property(op(ground_mat, unreal.MaterialExpressionMultiply, ground_col, const1(ground_mat, .03, -400, 250), -150, 250), '', unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+normal = lerp(ground_mat, tex(ground_mat, 'T_Ground103_NormalDX', wuv, -1100, 1350, 'normal'), tex(ground_mat, 'T_Ground054_NormalDX', wuv, -1100, 1600, 'normal'), h01, -500, 1400)
+MEL.connect_material_property(normal, '', unreal.MaterialProperty.MP_NORMAL)
+MEL.connect_material_property(const1(ground_mat, .9, -250, 200), '', unreal.MaterialProperty.MP_ROUGHNESS)
 MEL.recompile_material(ground_mat)
 assert unreal.EditorAssetLibrary.save_loaded_asset(ground_mat, False)
 
@@ -224,6 +260,51 @@ try:
     site.rerun_construction_scripts()
 except Exception:
     pass
+# ---- CC0 surfaces on the inherited M0 environment.
+for actor in actors.get_all_level_actors():
+    name = actor.get_actor_label()
+    if name in ('Ground_70m', 'HomeClearing', 'RuinFoundation') and isinstance(actor, unreal.StaticMeshActor):
+        actor.static_mesh_component.set_material(0, open_ground_mat if name == 'Ground_70m' else concrete_tex_mat)
+
+# ---- CC0 Kenney props (third_party/kenney-*). Generated; replaced on every run.
+KENNEY = '/Game/Downstream/ThirdParty/Kenney/'
+def prop(label, model, pos, yaw=0, scale=1.0, collide=True):
+    kit, name = model.split('/')
+    mesh = unreal.load_asset(f'{KENNEY}{kit}/{name}/SM_K_{name}')
+    assert mesh, 'Missing Kenney mesh ' + model + '; run scripts/import_third_party.ps1'
+    a = actors.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(*pos), unreal.Rotator(pitch=0, yaw=yaw, roll=0))
+    a.set_actor_label('M4_' + label)
+    a.static_mesh_component.set_static_mesh(mesh)
+    a.set_actor_scale3d(unreal.Vector(scale, scale, scale))
+    a.static_mesh_component.set_collision_profile_name('BlockAll' if collide else 'NoCollision')
+    return a
+props = []
+# Home perimeter: fortified fence on the north and west edges, outside the build grid.
+for i, x in enumerate(range(-2300, -700, 150)):
+    props.append(prop(f'HomeFenceN_{i}', 'Survival/fence_fortified', (x, 330, 0), 0, 3.0))
+for i, y in enumerate(range(-1200, 250, 150)):
+    props.append(prop(f'HomeFenceW_{i}', 'Survival/fence_fortified', (-2480, y, 0), 90, 3.0))
+props.append(prop('HomeTent', 'Survival/tent_canvas', (-2750, -650, 0), 90, 3.5))
+for i, (x, y) in enumerate([(-2400, 230), (-2330, 200), (-2390, 140)]):
+    props.append(prop(f'HomeBarrel_{i}', 'Survival/barrel', (x, y, 0), i * 40, 2.6))
+props.append(prop('HomeSignpost', 'Survival/signpost', (-650, -350, 0), -45, 3.0, False))
+# Industrial ruin cover.
+for i, (x, y, yaw) in enumerate([(1050, 80, 10), (2100, 250, 95), (1600, 1350, 15), (900, 1250, 75)]):
+    props.append(prop(f'RuinContainer_{i}', 'Industrial/shipping_container_' + ('a' if i % 2 == 0 else 'b'), (x, y, 0), yaw, 6.0))
+props.append(prop('RuinTank', 'Industrial/detail_tank_large', (2000, -150, 0), 30, 2.0))
+props.append(prop('RuinChimney', 'Industrial/chimney_medium', (2350, 1000, 0), 0, 3.0))
+props.append(prop('RuinMachine', 'Factory/machine', (1250, 1000, 0), 200, 1.6))
+props.append(prop('RuinHopper', 'Factory/hopper_square', (2300, 650, 0), 0, 1.5))
+for i, (x, y) in enumerate([(1450, 300), (1520, 340), (1180, 1100), (2250, 820), (980, 600)]):
+    props.append(prop(f'RuinBarrel_{i}', 'Survival/barrel' + ('_open' if i % 2 else ''), (x, y, 0), i * 70, 2.6))
+for i, (x, y) in enumerate([(1600, -50), (2220, 1260), (850, 450)]):
+    props.append(prop(f'RuinCrate_{i}', 'Survival/box_large', (x, y, 0), i * 35, 2.6))
+# Open ground.
+for i, (x, y, model, yaw) in enumerate([(-600, 900, 'a', 10), (-300, -1750, 'b', 80), (-1800, 1350, 'c', 200), (2950, -330, 'b', 140),
+                                        (3150, 1800, 'a', 30), (-2900, -1900, 'c', 300), (300, 1900, 'b', 60), (-1100, 2000, 'a', 120)]):
+    props.append(prop(f'Rock_{i}', 'Survival/rock_sand_' + model, (x, y, 0), yaw, 3.5))
+props.append(prop('SiteCone_0', 'Factory/cone', (850, -620, 0), 0, 2.0, False))
+props.append(prop('SiteCone_1', 'Factory/cone', (1050, -600, 0), 0, 2.0, False))
 label('SiteSign', 'DROWNED VAULT / drain it with a digger canal', (1900, -1500, 460), (120, 200, 255), 38)
 for actor in actors.get_all_level_actors():
     if actor.get_actor_label() == 'M1_SiteSign':
@@ -231,6 +312,6 @@ for actor in actors.get_all_level_actors():
 label('RouteSign', 'SALVAGE ROUTE', (-180,-450,190), (239,212,163), 35)
 assert level.save_current_level(), 'M1 save failed; close other processes using this map'
 assert unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
-report = {'passed':True,'map':MAP,'enemies':len(enemy_layout),'chasers':6,'shooters':3,'salvage_crates':3,'home':[-1450,-850,105],'audio_imports':len(tasks),'settlement_manager':manager.get_path_name(),'water_site':site.get_path_name(),'removed_for_site':removed_for_site,'actors':len(actors.get_all_level_actors())}
+report = {'passed':True,'map':MAP,'enemies':len(enemy_layout),'chasers':6,'shooters':3,'salvage_crates':3,'home':[-1450,-850,105],'audio_imports':len(tasks),'settlement_manager':manager.get_path_name(),'water_site':site.get_path_name(),'kenney_props':len(props),'removed_for_site':removed_for_site,'actors':len(actors.get_all_level_actors())}
 (ROOT / 'build' / 'expedition-generation.json').write_text(json.dumps(report, indent=2))
 unreal.log('DOWNSTREAM_EXPEDITION_GENERATED ' + json.dumps(report))

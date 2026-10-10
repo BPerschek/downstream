@@ -11,8 +11,11 @@
 
 namespace
 {
-UStaticMesh* LoadBuildingMesh(const TCHAR* Package)
+UStaticMesh* LoadBuildingMesh(const TCHAR* Preferred, const TCHAR* Package)
 {
+    // CC0 Kenney model first (third_party/kenney-*), then the original blockout.
+    if (FPackageName::DoesPackageExist(Preferred))
+        if (auto* Mesh = LoadObject<UStaticMesh>(nullptr, *FString::Printf(TEXT("%s.%s"), Preferred, *FPackageName::GetShortName(Preferred)))) return Mesh;
     if (FPackageName::DoesPackageExist(Package))
         if (auto* Mesh = LoadObject<UStaticMesh>(nullptr, *FString::Printf(TEXT("%s.%s"), Package, *FPackageName::GetShortName(Package)))) return Mesh;
     return LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -72,21 +75,24 @@ void ADownstreamSettlementBuilding::BeginPlay()
 void ADownstreamSettlementBuilding::RefreshAppearance()
 {
     const TCHAR* Package = TEXT("/Game/Downstream/Art/SM_Crate");
+    const TCHAR* Preferred = TEXT("/Game/Downstream/ThirdParty/Kenney/Industrial/shipping_container_a/SM_K_shipping_container_a");
     const TCHAR* Label = TEXT("STORAGE +8");
     FColor Color(245, 216, 145);
     if (StructureType == EDownstreamStructureType::Workshop)
     {
         Package = TEXT("/Game/Downstream/Art/SM_Shelter");
+        Preferred = TEXT("/Game/Downstream/ThirdParty/Kenney/Survival/structure_metal/SM_K_structure_metal");
         Label = TEXT("WORKSHOP");
         Color = FColor(244, 178, 113);
     }
     else if (StructureType == EDownstreamStructureType::Charger)
     {
         Package = TEXT("/Game/Downstream/Art/SM_Drum");
+        Preferred = TEXT("/Game/Downstream/ThirdParty/Kenney/Industrial/solar_panel_landscape_group/SM_K_solar_panel_landscape_group");
         Label = TEXT("CHARGER");
         Color = FColor(94, 236, 213);
     }
-    UStaticMesh* Mesh = LoadBuildingMesh(Package);
+    UStaticMesh* Mesh = LoadBuildingMesh(Preferred, Package);
     BuildingMesh->SetStaticMesh(Mesh);
     if (Mesh)
     {

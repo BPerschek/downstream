@@ -1,0 +1,51 @@
+{
+  "creator": "ambientCG (Lennart Demes)",
+  "license": "CC0 1.0 Universal; https://docs.ambientcg.com/license/ states all assets are CC0 and credit is not required",
+  "resolution": "1K JPG; NormalDX used for Unreal",
+  "acquired": "2026-10-09",
+  "materials": {
+    "Concrete034": {
+      "source_archive": "https://ambientcg.com/get?file=Concrete034_1K-JPG.zip",
+      "page": "https://ambientcg.com/view?id=Concrete034",
+      "archive_sha256": "5839d284d94ffb8d2a56df742ec522b13dd311c52dbd42b8fd33f0409ceedb81",
+      "files": {
+        "Concrete034_1K-JPG_Color.jpg": "8ceb9186d990b31fce785e06fdc6974c160f1d27c43f6160266f164deba713aa",
+        "Concrete034_1K-JPG_NormalDX.jpg": "b74da5fbc5f2d36f51f78fcf1064d60d872e31e7bb46beed6bc3107d37eabbe4",
+        "Concrete034_1K-JPG_Roughness.jpg": "a4a9e39857a19afd23a778e5abf44fcdf6bd7f93918f1cf6878b41933e553511"
+      }
+    },
+    "Ground054": {
+      "source_archive": "https://ambientcg.com/get?file=Ground054_1K-JPG.zip",
+      "page": "https://ambientcg.com/view?id=Ground054",
+      "archive_sha256": "b325ec2f167dce95a0fabc61a2104641288cf20915419578c3efdb46200c563e",
+      "files": {
+        "Ground054_1K-JPG_AmbientOcclusion.jpg": "14f32218d8ebbdee2b4e6ca627c4d95be7de8f42e6b3b774c42339673d91a534",
+        "Ground054_1K-JPG_Color.jpg": "77c0b5ac13eead1420887c608b2c28209a1ae5ba70761bf29953aa23cf3dc31b",
+        "Ground054_1K-JPG_NormalDX.jpg": "a46b124ec627636a1985f90b1148445678a919ba1d5c28f43aa776bed3f77e21",
+        "Ground054_1K-JPG_Roughness.jpg": "e19b6c7d4ee3d8a6b6ea4ecc525a1a4e32681be969af134a2ee5c6071b9dcec9"
+      }
+    },
+    "Ground103": {
+      "source_archive": "https://ambientcg.com/get?file=Ground103_1K-JPG.zip",
+      "page": "https://ambientcg.com/view?id=Ground103",
+      "archive_sha256": "735471be048f8c41120c3777a22b1f417bf511897c06f6f473edf0a05254362d",
+      "files": {
+        "Ground103_1K-JPG_AmbientOcclusion.jpg": "65d0133735424d6fa95c75ab609220c61a24c7e98181eaf11a2681b8fa6f1407",
+        "Ground103_1K-JPG_Color.jpg": "22650b378d43e7f62bf32c23aebf39a735c5e978ac27fac39827e142e6bd9ddf",
+        "Ground103_1K-JPG_NormalDX.jpg": "aeb459dadca8fe67497397213a488c04d1c03d28557a4f31a13d4cfc7627ab2e",
+        "Ground103_1K-JPG_Roughness.jpg": "09ba24fddb8241670d053a22e62ae6f304c2d0b9c21f6d75e06cf3a26b0795fb"
+      }
+    },
+    "Ground109": {
+      "source_archive": "https://ambientcg.com/get?file=Ground109_1K-JPG.zip",
+      "page": "https://ambientcg.com/view?id=Ground109",
+      "archive_sha256": "be2cdb97845d895bddcf75f3d7a307301e1cb22dee2c41c47b9af0b64ee0db3d",
+      "files": {
+        "Ground109_1K-JPG_AmbientOcclusion.jpg": "181dc12f1204d195c469425ae6471b5888314384c67d5864cc8c8c160a604039",
+        "Ground109_1K-JPG_Color.jpg": "b4449b688a772f033383b049b2be69fda9b4eede0cd9cde823c1be8cdc73ce05",
+        "Ground109_1K-JPG_NormalDX.jpg": "e02f40797781b70de3d51cb5e4aa5a117a7a6c1ea5c762ed32084379857a9aa5",
+        "Ground109_1K-JPG_Roughness.jpg": "a5e99cf99751817b832e39223277d18aa4b147d92304ee24d827eda13be0d1d2"
+      }
+    }
+  }
+}

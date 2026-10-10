@@ -1,0 +1,30 @@
+{
+  "title": "Survival Kit 2.0",
+  "creator": "Kenney (kenney.nl)",
+  "license": "CC0 1.0 Universal (vendor License.txt retained unchanged)",
+  "source_archive": "https://kenney.nl/media/pages/assets/survival-kit/4065a8185b-1712149243/kenney_survival-kit.zip",
+  "archive_sha256": "c3586341b5932c87eb43d75d915434f47daed168b17ed36a03e8ca9977c7443e",
+  "archive_bytes": 1948174,
+  "acquired": "2026-10-09",
+  "selected_files_sha256": {
+    "License.txt": "62c8356876481204fa4d40dc59183dfed777adf987d7f2a1390fffe8a699f3ff",
+    "Models/barrel-open.glb": "f24ab1c5ab3685fc758f7e7298bf4f255f039fc6dfc7463711fbe90c4c011a41",
+    "Models/barrel.glb": "3a0d12f6bdd1badd361f64ce0fbbf878a4ccfc2de8ff1ac4ed4c1aea2a9ee04a",
+    "Models/box-large.glb": "69b4052f32b7b27e5d2ee27041b091a07d4a2dd4d877168a701607a97609f0f6",
+    "Models/box.glb": "346eebd23986793b992ca6e05e9f98d6f5db96a9bfa3aa7c8360ac8b7920def8",
+    "Models/campfire-pit.glb": "a78ce38de408456649146077e1917d70bb39f7c87c3c7370276d809d2409b0ab",
+    "Models/chest.glb": "84b03023e425cc1f96c6d0b0f352608be9e8e01b112790e6b00b8651bf84379b",
+    "Models/fence-fortified.glb": "c50f420e9ebf0f1383a9f95766d47f377b19852651760b8223219cc2be850ece",
+    "Models/metal-panel-screws.glb": "c7b5bcea3aa19ebbcfdbfdc2d52cbb0120176f798186b137231d3f9102e75932",
+    "Models/rock-sand-a.glb": "df5e623e23d5d16ea24a754cbd4af5dbd086d4a2481566bf4abb05df0ac88be0",
+    "Models/rock-sand-b.glb": "55fbc0ebb6c6cba3e62ac2592117b0033d0e4a90a3863b24339d5dcf1d347090",
+    "Models/rock-sand-c.glb": "386d4b6729871288c7a4805f98c049089daeb5943656364131012edb92f8d5ee",
+    "Models/signpost.glb": "6d33757888c4ec9249610266ca8d60532b1138ae28fd37e93fa843ec4856fd25",
+    "Models/structure-metal-roof.glb": "7dbcfa227640df53dcd2f54dd9198413b78d5cd26f3ea062c9371be4284709f3",
+    "Models/structure-metal.glb": "36ec4b3e71bb02822f839fa4baf68295b5078aa778a81282c4a4e9348fa56ee5",
+    "Models/tent-canvas.glb": "efc4bca46a22e4cc4fe391aeafba161c24bc39bfa75e192c57eaacaf686f9717",
+    "Models/workbench-anvil.glb": "a6253df726c1eba7cbaddf7e31cd5a4adfac31309894bf647e4b803d9d75c275",
+    "Models/workbench.glb": "bf72d2d535fa29127e5078a6c4c2023a74fa5cd7d02d91ad550e897e088e1dc8",
+    "Models/Textures/colormap.png": "6ca023be9f12e8c2358fcf94320c8a894b4c05a3dd0bad1f5c268312053caca1"
+  }
+}

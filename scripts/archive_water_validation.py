@@ -29,12 +29,13 @@ for path in sorted((root / 'native' / 'Source').rglob('*')):
         source_hash.update(path.read_bytes())
 reports['canonical_source_sha256'] = source_hash.hexdigest()
 frames = {}
-for mode in ['flooded', 'drained']:
+for mode in ['flooded', 'drained', 'home', 'ruin']:
     source = root / 'build' / f'Downstream_Water_{mode}.png'
     destination = root / 'docs' / 'images' / f'Downstream_Water_{mode}.png'
     shutil.copy2(source, destination)
     frames[mode] = destination.relative_to(root).as_posix()
 reports['reviewed_frames'] = {'paths': frames, 'size': [1280, 720], 'mode': 'PIE capture with isolated saves', 'reviewed': True}
+reports['third_party'] = 'Kenney CC0 models and ambientCG CC0 textures; see ASSET_LICENSES.md and third_party/*/manifest.json'
 reports['recorded_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 reports['limits'] = 'Development editor/PIE validation. The flow test shortens DigActionSeconds to 0.12 for pacing. No packaged GPU performance claim; procedural terrain is not in the navmesh.'
 out = root / 'docs' / 'validation' / '2026-10-09-water-results.json'

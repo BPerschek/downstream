@@ -1,0 +1,22 @@
+{
+  "title": "Factory Kit 3.0",
+  "creator": "Kenney (kenney.nl)",
+  "license": "CC0 1.0 Universal (vendor License.txt retained unchanged)",
+  "source_archive": "https://kenney.nl/media/pages/assets/factory-kit/edaac9d4f6-1777639602/kenney_factory-kit_3.0.zip",
+  "archive_sha256": "7e31fb2308e90304672bd15cd18fa9d9f02c03731a8cbc57a8e3e1c181dfb0a7",
+  "archive_bytes": 4511890,
+  "acquired": "2026-10-09",
+  "selected_files_sha256": {
+    "License.txt": "61e86565dd297e143ad631594980eda0a17fc81a4cd7c6d71acf2f5e0cad30b6",
+    "Models/cone.glb": "deb6ea20fe61bc094f0e64a3d6891b029ff552c5ab00bf57b763798624228e41",
+    "Models/hopper-square.glb": "1b88e30011629015cea65777c5157026088ea557163bee43596d5083f1df0f39",
+    "Models/machine.glb": "a39e3042bcb7789274428357383317d70e1c31906e5301c99e7d9e90ac584863",
+    "Models/pipe-large-bend.glb": "e234cba2e29bd825b9acdab56c0ff36504a6ceea4c74b21dafbbd98e84bb793b",
+    "Models/pipe-large-long.glb": "8e6650cc662695c28fffb1ffa10f190255f7d9c6c1d4a2a48d375e9bbb89b04f",
+    "Models/pipe-large-valve.glb": "57126374dce5b172e06d5d6f8cbaab97c9cffe3e5e726060eb14c50a5bd519b6",
+    "Models/pipe-large.glb": "e30500f8ec6dc1fcc04c350ff9ecfd06470ec73e70d53b7b3b571031f30a3311",
+    "Models/robot-arm-a.glb": "ad3f766791adadd1cfb5ccc27d2b2ac8787848282f2a15b3c407f350dc281b68",
+    "Models/warning-traffic.glb": "b231e97424839b252e80555bc97d7360d2f04006cb3919675725a297bae049cd",
+    "Models/Textures/colormap.png": "35d7bd6900dde0208429eeaec87fa17fbf024ed59f3f4eab54bc92802eba9dd7"
+  }
+}

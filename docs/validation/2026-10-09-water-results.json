@@ -22,7 +22,7 @@
     "digger_used_direct_steering": false,
     "digger_hops": 4,
     "vault_depth_after": 0.0,
-    "drained_m3": 40.87498092651367,
+    "drained_m3": 40.874996185302734,
     "vault_reward": 16,
     "saved_terrain_cells": 32,
     "passed": true,
@@ -51,13 +51,13 @@
     "cargo_observed": 4,
     "delivery": true,
     "bank_after_delivery": 22,
-    "battery_after_job": 92.97748565673828,
+    "battery_after_job": 92.97676849365234,
     "charging_seen": true,
     "charging": true,
-    "battery_recovered": 99.0035171508789,
+    "battery_recovered": 99.03278350830078,
     "paused_stable": true,
     "saved_cargo": 2,
-    "saved_battery": 62.378471218049526,
+    "saved_battery": 62.39251872897148,
     "saved_bank": 22,
     "passed": true,
     "message": "Placement, spending, v1 migration, hostile avoidance, real hauling/delivery, recharge and idle/save passed",
@@ -106,11 +106,13 @@
     "water": "15/15 including the full Drowned Vault puzzle",
     "native_automation": "8/8"
   },
-  "canonical_source_sha256": "da5b288cad17ae99a50ef0a899e656b52da12641417b1ca12c21b241fbfd8f1e",
+  "canonical_source_sha256": "c1638835e28afda63df1a67e2c469f4101a2ac95810bae2915af7c781d73cf9a",
   "reviewed_frames": {
     "paths": {
       "flooded": "docs/images/Downstream_Water_flooded.png",
-      "drained": "docs/images/Downstream_Water_drained.png"
+      "drained": "docs/images/Downstream_Water_drained.png",
+      "home": "docs/images/Downstream_Water_home.png",
+      "ruin": "docs/images/Downstream_Water_ruin.png"
     },
     "size": [
       1280,
@@ -119,6 +121,7 @@
     "mode": "PIE capture with isolated saves",
     "reviewed": true
   },
-  "recorded_utc": "2026-10-10T01:59:29.977203+00:00",
+  "third_party": "Kenney CC0 models and ambientCG CC0 textures; see ASSET_LICENSES.md and third_party/*/manifest.json",
+  "recorded_utc": "2026-10-10T02:41:14.398313+00:00",
   "limits": "Development editor/PIE validation. The flow test shortens DigActionSeconds to 0.12 for pacing. No packaged GPU performance claim; procedural terrain is not in the navmesh."
 }
