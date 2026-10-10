@@ -44,6 +44,7 @@ $nativeDescriptor = $originalDescriptor | ConvertFrom-Json
 $nativeDescriptor | Add-Member -MemberType NoteProperty -Name Modules -Value @(
     [pscustomobject]@{Name='Downstream';Type='Runtime';LoadingPhase='Default'},
     [pscustomobject]@{Name='DownstreamSim';Type='Runtime';LoadingPhase='PreDefault'},
+    [pscustomobject]@{Name='DownstreamColony';Type='Runtime';LoadingPhase='Default'},
     [pscustomobject]@{Name='DownstreamCombat';Type='Runtime';LoadingPhase='Default'},
     [pscustomobject]@{Name='DownstreamRender';Type='Runtime';LoadingPhase='Default'}
 ) -Force

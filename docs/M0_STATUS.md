@@ -33,7 +33,9 @@ The renderer updates a non-colliding 32x32 developer patch from dirty metadata. 
 
 ## Scope boundary
 
-M1 contains an early combat/exploration/extraction loop. Banked salvage and one starter node persist; carry, enemies, pickups and recovery bags reset on launch. Settlement building, autonomous robots, water, factions, full progression, persistent world entities, multiplayer and endgame remain unimplemented. The robot is an unrigged static asset.
+M1 contains combat/exploration/extraction, a home settlement with a hauler, and the Drowned Vault water site with a digger (schema 3 persists bank, skill, structures, robots, dug terrain and vault state). Carry, enemies, pickups and recovery bags reset on launch. Factions, full progression, broader persistent world entities, multiplayer and endgame remain unimplemented. Robots use the unrigged static salvage-bot asset.
+
+Water (2026-10-09 evening): `WaterGrid` is a conserved virtual-pipe simulation on the game thread at 10 Hz, 640 cells, with no sleeping. It is not yet the chunked, worker-owned, active-cell system the brief targets. The site's procedural terrain has collision and rebuilds on edit (`FNavigationSystem::UpdateComponentData` is called), but it does not appear in the Recast navmesh in this build, so local navigation invalidation is still unproven. See [WATER_SITE](WATER_SITE.md).
 
 Original meshes/audio and Epic template resources supply the level. Harvest/Ready Map packs are absent from inspected payloads; the separate UE4.27 Shooter Game sample is not imported. Missing packs do not block this prototype. The locally enabled Adaptive plugin is optional to core gameplay and must be installed or disabled on another machine.
 

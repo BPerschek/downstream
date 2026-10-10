@@ -1,6 +1,6 @@
 # DOWNSTREAM
 
-DOWNSTREAM is a native Unreal Engine 5.8 single-player isometric expedition prototype. The saved **M1_Expedition** level contains a home clearing, a salvage route, an industrial ruin, two enemy behaviors, combat, collection, extraction, death recovery and a persistent stash. The owner's 2026-10-09 request prioritized a working gameplay concept before the remaining M0 performance work.
+DOWNSTREAM is a native Unreal Engine 5.8 single-player isometric expedition prototype. The saved **M1_Expedition** level contains a home clearing, a salvage route, an industrial ruin, two enemy behaviors, combat, collection, extraction, death recovery and a persistent stash; a buildable home settlement with a hauling robot; and the **Drowned Vault**, a flooded site with simulated water that a digger robot drains by cutting a canal you draw. The owner's 2026-10-09 request prioritized a working gameplay concept before the remaining M0 performance work.
 
 ## Play
 
@@ -17,15 +17,24 @@ powershell -ExecutionPolicy Bypass -File scripts/play.ps1
 | Left mouse, hold | Fire projectiles; ammunition is unlimited |
 | Right mouse | Nearby melee strike |
 | Space | Dodge in the movement direction, or facing direction while standing |
-| E | Collect nearby salvage; at home, extract and heal |
-| 1 | Choose Steady Aim: +15% ranged damage |
-| 2 | Choose Salvage Handling: +4 carrying slots |
+| E | Collect nearby salvage; open the drained vault; at home, extract and heal |
+| 1 | Choose Steady Aim: +15% ranged damage (builder open: select storage) |
+| 2 | Choose Salvage Handling: +4 carrying slots (builder open: select workshop) |
+| B | At home: open/close the builder. 1-3 select storage/workshop/charger, LMB place, RMB cancel, 4 assemble hauler, 5 assemble digger |
+| J | Enable/pause the hauler's salvage job |
+| G | Dig planner: drag LMB from the water to where it should drain; RMB cancels, G closes |
+| C | Clear the queued canals |
+| F9 | Water flow/depth developer overlay |
 
 Explore, fight, collect, then return to the green home area and press E. Six chasers and three shooters guard three caches containing four salvage each. Defeated enemies drop two salvage. Base carrying capacity is 12; a pickup must fit in full. Home's 340 cm radius protects the player from damage. Death leaves carried salvage in a recovery bag and respawns the player at home after 1.5 seconds. The HUD shows health, carry, bank, interaction prompts and the starter choice.
 
 Choose one free starter node; the choice and banked salvage persist across launches. Carry, enemies, field pickups and recovery bags reset on a fresh launch. Quitting does not bank carried salvage. The default save is `unreal/Downstream/Saved/Downstream/prototype-save.json`; see [save and test contracts](tests/EXPEDITION_TESTS.md) before modifying it.
 
-For editing, open `unreal/Downstream/Downstream.uproject`, then `/Game/Downstream/Maps/M1_Expedition`. M0_TestWorld remains a technical reference, launched with `scripts/play.ps1 -TechnicalMap`. F6 toggles the terrain station view; F7/F8 queue height edits. This debug mesh has no gameplay collision or navigation.
+**Settlement.** At home, B opens the builder. Storage (4 salvage, +8 pack), workshop (6) and charger (4) snap to a grid in the home clearing. With all three, assemble one hauler (8) that collects loose salvage away from living hostiles, banks it at storage and recharges. See [SETTLEMENT_TESTS](tests/SETTLEMENT_TESTS.md).
+
+**Drowned Vault.** South-east of the ruin, a burst main keeps a basin flooded 1.3 m deep over a sealed vault. Assemble a digger at the workshop (5, 10 salvage), press G and drag a canal from the basin to the old culvert on the south edge. The digger cuts it step by step, the water drains, and E opens the vault for 16 salvage. Water slows anyone wading in it. Dug terrain, the digger and the vault state persist (save schema 3). See [WATER_SITE](docs/WATER_SITE.md).
+
+For editing, open `unreal/Downstream/Downstream.uproject`, then `/Game/Downstream/Maps/M1_Expedition`. M0_TestWorld remains a technical reference, launched with `scripts/play.ps1 -TechnicalMap`. There, F6 toggles the terrain station view and F7/F8 queue height edits; this debug mesh has no gameplay collision or navigation and is no longer placed in M1.
 
 ## Current delivery and evidence
 
@@ -35,7 +44,13 @@ The 17 standalone simulation tests, expedition economy suite and all eight nativ
 
 ![M1 expedition: player at home with health, carry, bank and starter-node HUD](docs/images/Downstream_Playable_Concept.png)
 
-This is an early gameplay slice. Settlement building, autonomous robots, water, factions, a full skill tree, persistent world entities and endgame progression remain future work. Actor/Mass comparison, worker-thread snapshots and a packaged RTX 5050 / 1080p / 60 FPS benchmark are also open.
+![Drowned Vault flooded: basin over the sealed vault, feed ditch from the burst main](docs/images/Downstream_Water_flooded.png)
+
+![Drowned Vault after the digger's canal: graded trench with spoil berms, drained basin, opened vault](docs/images/Downstream_Water_drained.png)
+
+Water/settlement evidence: [2026-10-09-water-results.json](docs/validation/2026-10-09-water-results.json).
+
+This is an early gameplay slice. One settlement, two robot roles and one water site exist; factions, a full skill tree, broader persistent world entities, more water structures (gates, dams, pumps), weather and endgame progression remain future work. Actor/Mass comparison, worker-thread snapshots and a packaged RTX 5050 / 1080p / 60 FPS benchmark are also open.
 
 ## Build and verify
 
@@ -45,12 +60,16 @@ Run PowerShell from this repository root. Save and close project editors before 
 powershell -ExecutionPolicy Bypass -File scripts/build_native.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test_sim.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test_expedition.ps1
+powershell -ExecutionPolicy Bypass -File scripts/test_settlement.ps1
+powershell -ExecutionPolicy Bypass -File scripts/test_water.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test_native.ps1
 powershell -ExecutionPolicy Bypass -File scripts/verify_expedition.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verify_settlement.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verify_water.ps1
 powershell -ExecutionPolicy Bypass -File scripts/verify_play.ps1
 ```
 
-`verify_expedition.ps1` uses an isolated save directory under `build/` and a separate process to verify reload, preserving the owner's normal save. `verify_play.ps1` checks movement, camera and the M0 native terrain station. Logs and generated reports are ignored under `build/`.
+`verify_expedition.ps1`, `verify_settlement.ps1` and `verify_water.ps1` use isolated save directories under `build/` and a separate process to verify reload, preserving the owner's normal save. `verify_play.ps1` checks movement, camera and the M0 native terrain station. Logs and generated reports are ignored under `build/`.
 
 On another machine, install compatible Unreal 5.8 and Visual Studio C++ tools/Windows SDK, update `scripts/project_paths.ps1`, and reassociate the project with that engine installation. Run `scripts/setup_test_compiler.ps1` once if the portable compiler for plain C++ tests is absent. This PC uses UE 5.8.3, Visual Studio Community 2026, MSVC 14.44.35229 and SDK 10.0.26100.0; [TOOLCHAIN](docs/TOOLCHAIN.md) explains compatibility and source synchronization.
 
@@ -64,4 +83,4 @@ The nine original meshes retain editable Blender source, FBX exports, palette an
 
 ## Future agent handoff
 
-Read [AGENTS](AGENTS.md), [PLAYABLE_CONCEPT](docs/PLAYABLE_CONCEPT.md), [ARCHITECTURE_DECISIONS](docs/ARCHITECTURE_DECISIONS.md), [TOOLCHAIN](docs/TOOLCHAIN.md), [EXPEDITION_TESTS](tests/EXPEDITION_TESTS.md) and [M0_STATUS](docs/M0_STATUS.md). The playable concept records the loop, tuning seam, module ownership, generation workflow and next work. The [v0.3 design brief](docs/reference/DOWNSTREAM_Design_Doc_v0.3.md) and dated specs/plans supply design context and history.
+Read [AGENTS](AGENTS.md), [PLAYABLE_CONCEPT](docs/PLAYABLE_CONCEPT.md), [WATER_SITE](docs/WATER_SITE.md), [SETTLEMENT_TESTS](tests/SETTLEMENT_TESTS.md), [ARCHITECTURE_DECISIONS](docs/ARCHITECTURE_DECISIONS.md), [TOOLCHAIN](docs/TOOLCHAIN.md), [EXPEDITION_TESTS](tests/EXPEDITION_TESTS.md) and [M0_STATUS](docs/M0_STATUS.md). The playable concept records the loop, tuning seam, module ownership, generation workflow and next work. The [v0.3 design brief](docs/reference/DOWNSTREAM_Design_Doc_v0.3.md) and dated specs/plans supply design context and history.

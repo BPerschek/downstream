@@ -7,7 +7,7 @@ public class DownstreamRender : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new string[]
         {
-            "Core", "CoreUObject", "Engine", "Downstream", "DownstreamSim", "DownstreamCombat", "ProceduralMeshComponent"
+            "Core", "CoreUObject", "Engine", "Downstream", "DownstreamSim", "DownstreamColony", "DownstreamCombat", "ProceduralMeshComponent"
         });
         PrivateDependencyModuleNames.Add("InputCore");
     }

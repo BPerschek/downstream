@@ -4,16 +4,17 @@ This repository is a UE5.8 single-player isometric expedition prototype. The own
 
 ## Read first
 
-README.md, docs/PLAYABLE_CONCEPT.md, docs/ARCHITECTURE_DECISIONS.md, docs/TOOLCHAIN.md, ASSET_LICENSES.md, tests/EXPEDITION_TESTS.md. Specs/plans under docs/superpowers describe scope/history. docs/M0_STATUS.md tracks incomplete technical acceptance.
+README.md, docs/PLAYABLE_CONCEPT.md, docs/WATER_SITE.md, tests/SETTLEMENT_TESTS.md, docs/ARCHITECTURE_DECISIONS.md, docs/TOOLCHAIN.md, ASSET_LICENSES.md, tests/EXPEDITION_TESTS.md. Specs/plans under docs/superpowers describe scope/history. docs/M0_STATUS.md tracks incomplete technical acceptance.
 
 ## Source and module ownership
 
 - Edit native/Source only. build_native.ps1 creates the ignored unreal/Downstream/Source mirror and rejects independent edits.
-- DownstreamSim: pure standard C++ simulation/expedition data; UE wrapper depends Core only. No UObject/Actor/render dependencies in simulation/state headers.
-- Downstream: world lifecycle, tuning, inventory/stash, JSON persistence, pickup/extraction Actors. Private Json dependency.
+- DownstreamSim: pure standard C++ simulation/expedition/settlement data, WaterGrid (virtual-pipe shallow water) and Earthworks (site layout, DigJob, terrain deltas); UE wrapper depends Core only. No UObject/Actor/render dependencies in simulation/state headers.
+- Downstream: world lifecycle, tuning, inventory/stash/settlement/earthworks, JSON persistence (schema 3), pickup/extraction Actors, UDownstreamWaterSubsystem (owns the WaterGrid, dig queue, vault) and the vault presentation actor. Private Json dependency.
+- DownstreamColony: settlement manager, building actors, hauler and digger robots. Depends Downstream/Sim only.
 - DownstreamCombat: native player/controller/GameMode, GAS health, ranged/melee/dodge, two AI behaviors. Depends Downstream; must not depend Render.
-- DownstreamRender: terrain debug mesh, Canvas gameplay HUD and developer console controls. Depends Combat and Downstream. Terrain dirty metadata has one consumer in this prototype.
-- Simulation adapter runs on the game thread at10Hz; combat at frame rate. Worker ownership, immutable snapshots, local nav invalidation, water and colony systems remain future work.
+- DownstreamRender: M0 terrain debug mesh, ADownstreamWaterSite (procedural terrain with collision + water surface + canal markers + F9 overlay), Canvas gameplay HUD and developer controls. Depends Combat, Colony and Downstream. Procedural triangle winding is {A,C,B},{B,C,D} (B=+X, C=+Y); the reverse breaks character collision. Terrain dirty metadata has one consumer in this prototype.
+- Simulation adapters (M0 terrain, water) run on the game thread at 10 Hz; combat at frame rate. Worker ownership, immutable snapshots and navmesh coverage of procedural terrain remain future work (the digger navigates only to the site edge, then drives directly).
 
 ## Build and test
 
@@ -23,8 +24,12 @@ Run PowerShell from repo root. Engine paths: scripts/project_paths.ps1. Toolchai
 powershell -ExecutionPolicy Bypass -File scripts/build_native.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test_sim.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test_expedition.ps1
+powershell -ExecutionPolicy Bypass -File scripts/test_settlement.ps1
+powershell -ExecutionPolicy Bypass -File scripts/test_water.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test_native.ps1
 powershell -ExecutionPolicy Bypass -File scripts/verify_expedition.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verify_settlement.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verify_water.ps1
 powershell -ExecutionPolicy Bypass -File scripts/verify_play.ps1
 ```
 
@@ -40,7 +45,7 @@ Stats/sounds live at /Game/Downstream/Data/DA_PrototypeTuning (native defaults a
 
 ## Saves and verification isolation
 
-Default save unreal/Downstream/Saved/Downstream/prototype-save.json schema1 stores banked_salvage and selected_skill. Carry/enemies/pickups reset on launch; recovery bags last for the current run. Banking commits state only after write succeeds. Invalid/unknown schema preserves files and blocks bank/skill writes with HUD feedback. Backup/temp handling: tests/EXPEDITION_TESTS.md.
+Default save unreal/Downstream/Saved/Downstream/prototype-save.json, schema 3: banked_salvage, selected_skill, structures, hauler, earthworks (digger_built, vault_opened, terrain_mm). Schemas 1/2 migrate on the next write. Carry/enemies/pickups reset on launch; recovery bags last for the current run. Banking commits state only after write succeeds. Invalid/unknown schema preserves files and blocks bank/skill writes with HUD feedback. Backup/temp handling: tests/EXPEDITION_TESTS.md.
 
 Never remove an owner's save for testing. verify_expedition.ps1 uses -DownstreamSaveDir in build/expedition-test-save and a separate-process reload. It removes only named generated test files. Tests exercise real projectiles, both AI attacks, melee, home protection/heal, extraction, death/respawn/recovery. Logs go in ignored build/; preserve durable status/screenshots in docs/.
 

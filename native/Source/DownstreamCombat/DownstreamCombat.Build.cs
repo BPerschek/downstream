@@ -7,7 +7,7 @@ public class DownstreamCombat : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new string[]
         {
-            "Core", "CoreUObject", "Engine", "Downstream", "DownstreamSim",
+            "Core", "CoreUObject", "Engine", "Downstream", "DownstreamSim", "DownstreamColony",
             "GameplayAbilities", "GameplayTags", "GameplayTasks"
         });
         PrivateDependencyModuleNames.AddRange(new string[] { "InputCore", "AIModule", "NavigationSystem" });

@@ -53,6 +53,7 @@ float ADownstreamEnemy::InitialHealth() const
 void ADownstreamEnemy::BeginPlay()
 {
     Super::BeginPlay();
+    Tags.AddUnique(TEXT("DownstreamHostile"));
     SpawnLocation = GetActorLocation();
     const auto* Tuning = GetTuning();
     const bool bChaser = Kind == EDownstreamEnemyKind::Chaser;
@@ -143,6 +144,7 @@ void ADownstreamEnemy::AttackPlayer(ADownstreamPlayerCharacter* Player)
 
 void ADownstreamEnemy::OnCombatDeath()
 {
+    Tags.Remove(TEXT("DownstreamHostile"));
     StopMoving();
     if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
         Expedition->SpawnSalvage(GetActorLocation(), 2);

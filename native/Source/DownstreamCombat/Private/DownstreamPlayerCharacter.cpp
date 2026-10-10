@@ -4,6 +4,8 @@
 #include "DownstreamGameMode.h"
 #include "DownstreamExpeditionSubsystem.h"
 #include "DownstreamPrototypeTuning.h"
+#include "DownstreamSettlementManager.h"
+#include "DownstreamWaterSubsystem.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -68,6 +70,13 @@ void ADownstreamPlayerCharacter::SetupPlayerInputComponent(UInputComponent* Inpu
     Input->BindAction(TEXT("Interact"), IE_Pressed, this, &ADownstreamPlayerCharacter::Interact);
     Input->BindAction(TEXT("SkillCombat"), IE_Pressed, this, &ADownstreamPlayerCharacter::ChooseCombatSkill);
     Input->BindAction(TEXT("SkillSalvage"), IE_Pressed, this, &ADownstreamPlayerCharacter::ChooseSalvageSkill);
+    Input->BindAction(TEXT("BuildMenu"), IE_Pressed, this, &ADownstreamPlayerCharacter::ToggleBuildMenu);
+    Input->BindAction(TEXT("BuildCharger"), IE_Pressed, this, &ADownstreamPlayerCharacter::ChooseCharger);
+    Input->BindAction(TEXT("BuildHauler"), IE_Pressed, this, &ADownstreamPlayerCharacter::ConstructHauler);
+    Input->BindAction(TEXT("ToggleHauling"), IE_Pressed, this, &ADownstreamPlayerCharacter::ToggleHauling);
+    Input->BindAction(TEXT("BuildDigger"), IE_Pressed, this, &ADownstreamPlayerCharacter::ConstructDigger);
+    Input->BindAction(TEXT("DigPlanner"), IE_Pressed, this, &ADownstreamPlayerCharacter::ToggleDigPlanner);
+    Input->BindAction(TEXT("ClearDigQueue"), IE_Pressed, this, &ADownstreamPlayerCharacter::ClearDigQueue);
 }
 
 void ADownstreamPlayerCharacter::Tick(float DeltaSeconds)
@@ -76,7 +85,9 @@ void ADownstreamPlayerCharacter::Tick(float DeltaSeconds)
     if (IsDead()) return;
     if (bDodging && GetWorld()->GetTimeSeconds() >= DodgeEndTime) EndDodge();
     UpdateAim();
-    if (bFiring && !bDodging) FireAt(AimLocation);
+    if (bBuildMenuOpen) UpdatePlacementPreview();
+    else if (bDigPlannerOpen) UpdateCanalCursor();
+    else if (bFiring && !bDodging) FireAt(AimLocation);
 }
 
 FVector ADownstreamPlayerCharacter::MovementDirection() const
@@ -113,12 +124,22 @@ void ADownstreamPlayerCharacter::UpdateAim()
     if (!Direction.IsNearlyZero()) SetActorRotation(Direction.Rotation());
 }
 
-void ADownstreamPlayerCharacter::StartFire() { bFiring = true; if (!IsDead()) { UpdateAim(); FireAt(AimLocation); } }
-void ADownstreamPlayerCharacter::StopFire() { bFiring = false; }
+void ADownstreamPlayerCharacter::StartFire()
+{
+    if (bBuildMenuOpen) { PlaceSelectedStructure(); return; }
+    if (bDigPlannerOpen) { BeginCanalDrag(); return; }
+    bFiring = true;
+    if (!IsDead()) { UpdateAim(); FireAt(AimLocation); }
+}
+void ADownstreamPlayerCharacter::StopFire()
+{
+    bFiring = false;
+    if (bDigPlannerOpen && bDraggingCanal) FinishCanalDrag();
+}
 
 void ADownstreamPlayerCharacter::FireAt(FVector WorldTarget)
 {
-    if (IsDead() || bDodging || WorldTarget.ContainsNaN()) return;
+    if (IsDead() || bDodging || bBuildMenuOpen || bDigPlannerOpen || WorldTarget.ContainsNaN()) return;
     FVector Direction = (WorldTarget - GetActorLocation()).GetSafeNormal2D();
     if (Direction.IsNearlyZero()) Direction = GetActorForwardVector();
     const auto* Tuning = GetTuning();
@@ -138,6 +159,13 @@ void ADownstreamPlayerCharacter::FireAt(FVector WorldTarget)
 
 void ADownstreamPlayerCharacter::PerformMelee()
 {
+    if (bBuildMenuOpen) { CancelPlacement(); return; }
+    if (bDigPlannerOpen)
+    {
+        if (bDraggingCanal) bDraggingCanal = false;
+        else ToggleDigPlanner();
+        return;
+    }
     if (IsDead() || bDodging) return;
     UpdateAim();
     const auto* Tuning = GetTuning();
@@ -194,6 +222,8 @@ bool ADownstreamPlayerCharacter::IsProtectedFromDamage() const
 void ADownstreamPlayerCharacter::Interact()
 {
     if (IsDead()) return;
+    if (auto* Water = UDownstreamWaterSubsystem::GetForWorld(this))
+        if (Water->TryInteractVault(this)) return;
     if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
     {
         Expedition->TryInteract(this);
@@ -202,11 +232,13 @@ void ADownstreamPlayerCharacter::Interact()
 }
 void ADownstreamPlayerCharacter::ChooseCombatSkill()
 {
+    if (bBuildMenuOpen) { SelectStructure(EDownstreamStructureType::Storage); return; }
     if (!IsDead()) if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
         Expedition->ChooseStarterSkill(TEXT("steady_aim"));
 }
 void ADownstreamPlayerCharacter::ChooseSalvageSkill()
 {
+    if (bBuildMenuOpen) { SelectStructure(EDownstreamStructureType::Workshop); return; }
     if (!IsDead()) if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
         Expedition->ChooseStarterSkill(TEXT("salvage_handling"));
 }
@@ -214,10 +246,154 @@ void ADownstreamPlayerCharacter::ChooseSalvageSkill()
 void ADownstreamPlayerCharacter::OnCombatDeath()
 {
     bFiring = false;
+    bBuildMenuOpen = false;
+    bDigPlannerOpen = false;
+    bDraggingCanal = false;
+    CancelPlacement();
     EndDodge();
     if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
         Expedition->HandlePlayerDeath(GetActorLocation());
     if (auto* GameMode = GetWorld()->GetAuthGameMode<ADownstreamGameMode>())
         GameMode->RequestPlayerRespawn(GetController(), this);
     else SetLifeSpan(GetTuning()->RespawnDelay + 0.1f);
+}
+
+void ADownstreamPlayerCharacter::ToggleBuildMenu()
+{
+    if (IsDead()) return;
+    auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>();
+    if (!bBuildMenuOpen && (!Expedition || !Expedition->IsAtHome(GetActorLocation()))) return;
+    bBuildMenuOpen = !bBuildMenuOpen;
+    if (bBuildMenuOpen) { bDigPlannerOpen = false; bDraggingCanal = false; }
+    StopFire();
+    if (!bBuildMenuOpen) CancelPlacement();
+}
+
+void ADownstreamPlayerCharacter::SelectStructure(EDownstreamStructureType Type)
+{
+    if (!bBuildMenuOpen || IsDead()) return;
+    SelectedStructure = Type;
+    bPlacementSelected = true;
+    UpdatePlacementPreview();
+}
+
+void ADownstreamPlayerCharacter::ChooseCharger()
+{
+    SelectStructure(EDownstreamStructureType::Charger);
+}
+
+void ADownstreamPlayerCharacter::UpdatePlacementPreview()
+{
+    auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>();
+    if (!Expedition || !Expedition->IsAtHome(GetActorLocation()))
+    {
+        bBuildMenuOpen = false;
+        CancelPlacement();
+        return;
+    }
+    if (!bPlacementSelected) return;
+    auto* PC = Cast<APlayerController>(GetController());
+    FHitResult Cursor;
+    if (PC && PC->GetHitResultUnderCursor(ECC_Visibility, false, Cursor))
+        PlacementLocation = Expedition->GetSnappedBuildLocation(Cursor.ImpactPoint);
+    else
+        PlacementLocation = Expedition->GetSnappedBuildLocation(AimLocation);
+    if (auto* Manager = ADownstreamSettlementManager::GetForWorld(this))
+        Manager->SetPlacementPreview(SelectedStructure, PlacementLocation, true);
+}
+
+bool ADownstreamPlayerCharacter::PlaceSelectedStructure()
+{
+    if (!bBuildMenuOpen || !bPlacementSelected || IsDead()) return false;
+    UpdatePlacementPreview();
+    auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>();
+    if (!Expedition || !Expedition->TryPlaceStructure(SelectedStructure, PlacementLocation, this)) return false;
+    CancelPlacement();
+    return true;
+}
+
+void ADownstreamPlayerCharacter::CancelPlacement()
+{
+    bPlacementSelected = false;
+    if (auto* Manager = ADownstreamSettlementManager::GetForWorld(this)) Manager->ClearPlacementPreview();
+}
+
+void ADownstreamPlayerCharacter::ConstructHauler()
+{
+    if (!bBuildMenuOpen || IsDead()) return;
+    if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
+        if (Expedition->TryConstructHauler(this)) CancelPlacement();
+}
+
+void ADownstreamPlayerCharacter::ToggleHauling()
+{
+    if (!IsDead()) if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
+        Expedition->SetHaulingEnabled(!Expedition->IsHaulingEnabled(), this);
+}
+
+void ADownstreamPlayerCharacter::ConstructDigger()
+{
+    if (!bBuildMenuOpen || IsDead()) return;
+    if (auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>())
+        if (Expedition->TryConstructDigger(this)) CancelPlacement();
+}
+
+void ADownstreamPlayerCharacter::ToggleDigPlanner()
+{
+    if (IsDead()) return;
+    auto* Expedition = GetWorld()->GetSubsystem<UDownstreamExpeditionSubsystem>();
+    auto* Water = UDownstreamWaterSubsystem::GetForWorld(this);
+    if (!bDigPlannerOpen)
+    {
+        if (!Water || !Water->IsSiteActive()) return;
+        if (!Expedition || !Expedition->IsDiggerBuilt())
+        {
+            if (Expedition) Expedition->PostStatus(TEXT("No digger yet. At home: B, then 5 to assemble one at the workshop."));
+            return;
+        }
+        if (bBuildMenuOpen) { bBuildMenuOpen = false; CancelPlacement(); }
+        StopFire();
+    }
+    bDigPlannerOpen = !bDigPlannerOpen;
+    bDraggingCanal = false;
+    if (bDigPlannerOpen && Expedition)
+        Expedition->PostStatus(TEXT("Dig planner: drag LMB from the water to where it should drain. RMB cancels, G closes."));
+}
+
+void ADownstreamPlayerCharacter::ClearDigQueue()
+{
+    if (IsDead()) return;
+    if (auto* Water = UDownstreamWaterSubsystem::GetForWorld(this)) Water->ClearDigQueue();
+}
+
+void ADownstreamPlayerCharacter::UpdateCanalCursor()
+{
+    bCanalCursorValid = false;
+    auto* Water = UDownstreamWaterSubsystem::GetForWorld(this);
+    auto* PC = Cast<APlayerController>(GetController());
+    if (!Water || !PC) return;
+    FHitResult Cursor;
+    if (PC->GetHitResultUnderCursor(ECC_Visibility, false, Cursor))
+        bCanalCursorValid = Water->WorldToCell(Cursor.ImpactPoint, CanalCursor);
+}
+
+void ADownstreamPlayerCharacter::BeginCanalDrag()
+{
+    UpdateCanalCursor();
+    if (!bCanalCursorValid) return;
+    CanalDragStart = CanalCursor;
+    bDraggingCanal = true;
+}
+
+void ADownstreamPlayerCharacter::FinishCanalDrag()
+{
+    UpdateCanalCursor();
+    bDraggingCanal = false;
+    if (bCanalCursorValid) PlanCanal(CanalDragStart, CanalCursor);
+}
+
+bool ADownstreamPlayerCharacter::PlanCanal(FIntPoint From, FIntPoint To)
+{
+    auto* Water = UDownstreamWaterSubsystem::GetForWorld(this);
+    return !IsDead() && Water && Water->DesignateCanal(From, To, this);
 }

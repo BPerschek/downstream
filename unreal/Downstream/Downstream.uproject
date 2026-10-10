@@ -54,6 +54,11 @@
                         "LoadingPhase":  "PreDefault"
                     },
                     {
+                        "Name":  "DownstreamColony",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "Default"
+                    },
+                    {
                         "Name":  "DownstreamCombat",
                         "Type":  "Runtime",
                         "LoadingPhase":  "Default"

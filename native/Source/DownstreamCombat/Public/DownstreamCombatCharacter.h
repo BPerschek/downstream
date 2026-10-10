@@ -28,6 +28,8 @@ public:
     UFUNCTION(BlueprintPure, Category="Combat") bool IsDead() const { return bDead; }
     UFUNCTION(BlueprintPure, Category="Combat") virtual bool IsPlayerCombatant() const { return false; }
     UFUNCTION(BlueprintCallable, Category="Combat") void ReceiveCombatDamage(float Damage, AActor* Source);
+    // Metres of water at the pawn's feet (Drowned Vault site); zero elsewhere.
+    UFUNCTION(BlueprintPure, Category="Combat") float GetWaterDepth() const { return WaterDepth; }
 
 protected:
     virtual void BeginPlay() override;
@@ -48,5 +50,7 @@ private:
     UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> FeedbackMaterials;
     FLinearColor BaseFeedbackColor = FLinearColor::White;
     float DamageFlashRemaining = 0.0f;
+    float WadeBaseSpeed = 0.0f;
+    float WaterDepth = 0.0f;
     bool bDead = false;
 };

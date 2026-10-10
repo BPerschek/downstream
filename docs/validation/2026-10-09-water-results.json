@@ -1,0 +1,124 @@
+{
+  "water_legacy": {
+    "mode": "legacy",
+    "vault_depth_start": 1.2999999523162842,
+    "water_start": 57.595577239990234,
+    "passed": true,
+    "message": "Schema1 loads into an untouched flooded site; planning requires a digger",
+    "stage": "spawn"
+  },
+  "water_flow": {
+    "mode": "flow",
+    "vault_depth_start": 1.2999999523162842,
+    "water_start": 57.595577239990234,
+    "wade_depth": 0.45371896028518677,
+    "wade_speed": 412.75,
+    "digger_cost": 10,
+    "bank_after_digger": 20,
+    "test_dig_action_seconds": 0.12,
+    "canal_cells": 18,
+    "dig_actions": 70,
+    "dig_seconds": 56.5,
+    "digger_used_direct_steering": false,
+    "digger_hops": 4,
+    "vault_depth_after": 0.0,
+    "drained_m3": 40.87498092651367,
+    "vault_reward": 16,
+    "saved_terrain_cells": 32,
+    "passed": true,
+    "message": "Flooded vault, wading slowdown, digger assembly, real robot canal, drain, vault reward and v3 save passed",
+    "stage": "open"
+  },
+  "water_reload": {
+    "mode": "reload",
+    "vault_depth_start": 0.0,
+    "water_start": 16.72039222717285,
+    "restored_deltas": 32,
+    "vault_depth": 0.0,
+    "passed": true,
+    "message": "Schema3 earthworks restored: digger, opened vault and drained canal persist",
+    "stage": "reload_digger"
+  },
+  "settlement_flow": {
+    "mode": "flow",
+    "legacy_migrated": true,
+    "structures": 3,
+    "build_cost": 22,
+    "bank_after_build": 18,
+    "capacity": 20,
+    "builder_controls": true,
+    "hostile_avoidance": true,
+    "cargo_observed": 4,
+    "delivery": true,
+    "bank_after_delivery": 22,
+    "battery_after_job": 92.97748565673828,
+    "charging_seen": true,
+    "charging": true,
+    "battery_recovered": 99.0035171508789,
+    "paused_stable": true,
+    "saved_cargo": 2,
+    "saved_battery": 62.378471218049526,
+    "saved_bank": 22,
+    "passed": true,
+    "message": "Placement, spending, v1 migration, hostile avoidance, real hauling/delivery, recharge and idle/save passed",
+    "stage": "paused_stable"
+  },
+  "settlement_reload": {
+    "mode": "reload",
+    "structures": 3,
+    "restored_bank": 24,
+    "restored_cargo_delivered_once": true,
+    "capacity": 20,
+    "passed": true,
+    "message": "Schema2 structures/capacity/skill/intent restored and saved cargo delivered exactly once",
+    "stage": "reload_stable"
+  },
+  "settlement_unfunded": {
+    "mode": "unfunded",
+    "passed": true,
+    "message": "Unaffordable placement and robot prerequisites reject without spending",
+    "stage": "spawn"
+  },
+  "settlement_invalid": {
+    "mode": "invalid",
+    "passed": true,
+    "message": "Malformed numeric JSON preserved; banking and skill writes blocked; carry retained",
+    "stage": "spawn"
+  },
+  "settlement_write_failure": {
+    "mode": "write_failure",
+    "passed": true,
+    "message": "Disk failure preserves bank/cargo/pickup/intent and releases claim",
+    "stage": "spawn"
+  },
+  "expedition_play": {
+    "passed": true,
+    "message": "Movement, ranged/melee, both enemy AI, extraction, home, death/recovery, dodge and save passed"
+  },
+  "expedition_reload": {
+    "passed": true,
+    "message": "Save reload and field reset passed"
+  },
+  "standalone_tests": {
+    "simulation": "17/17",
+    "expedition": "passed",
+    "settlement": "passed",
+    "water": "15/15 including the full Drowned Vault puzzle",
+    "native_automation": "8/8"
+  },
+  "canonical_source_sha256": "da5b288cad17ae99a50ef0a899e656b52da12641417b1ca12c21b241fbfd8f1e",
+  "reviewed_frames": {
+    "paths": {
+      "flooded": "docs/images/Downstream_Water_flooded.png",
+      "drained": "docs/images/Downstream_Water_drained.png"
+    },
+    "size": [
+      1280,
+      720
+    ],
+    "mode": "PIE capture with isolated saves",
+    "reviewed": true
+  },
+  "recorded_utc": "2026-10-10T01:59:29.977203+00:00",
+  "limits": "Development editor/PIE validation. The flow test shortens DigActionSeconds to 0.12 for pacing. No packaged GPU performance claim; procedural terrain is not in the navmesh."
+}

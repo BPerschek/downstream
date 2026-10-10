@@ -15,11 +15,29 @@ public:
     explicit ExpeditionState(std::int32_t capacity = 12) : BaseCapacity(std::max<std::int32_t>(0, capacity)) {}
     std::int32_t GetCarriedSalvage() const { return Carried; }
     std::int32_t GetBankedSalvage() const { return Banked; }
+    bool SpendBanked(std::int32_t amount)
+    {
+        if (amount <= 0 || amount > Banked) return false;
+        Banked -= amount;
+        return true;
+    }
+    bool AddBanked(std::int32_t amount)
+    {
+        if (amount <= 0 || Banked > std::numeric_limits<std::int32_t>::max() - amount) return false;
+        Banked += amount;
+        return true;
+    }
+    bool SetSettlementCapacityBonus(std::int32_t bonus)
+    {
+        if (bonus < 0) return false;
+        SettlementCapacityBonus = bonus;
+        return true;
+    }
     std::int32_t GetInventoryCapacity() const
     {
-        const std::int32_t bonus = Skill == "salvage_handling" ? 4 : 0;
-        return BaseCapacity > std::numeric_limits<std::int32_t>::max() - bonus
-            ? std::numeric_limits<std::int32_t>::max() : BaseCapacity + bonus;
+        const std::int64_t capacity = static_cast<std::int64_t>(BaseCapacity) + SettlementCapacityBonus
+            + (Skill == "salvage_handling" ? 4 : 0);
+        return static_cast<std::int32_t>(std::min<std::int64_t>(capacity, std::numeric_limits<std::int32_t>::max()));
     }
     double GetRangedDamageMultiplier() const { return Skill == "steady_aim" ? 1.15 : 1.0; }
     const std::string& GetSelectedSkillId() const { return Skill; }
@@ -59,6 +77,7 @@ public:
         Banked = static_cast<std::int32_t>(banked);
         Skill = skill;
         Carried = 0;
+        SettlementCapacityBonus = 0;
         return true;
     }
 
@@ -70,6 +89,7 @@ private:
     std::int32_t BaseCapacity = 12;
     std::int32_t Carried = 0;
     std::int32_t Banked = 0;
+    std::int32_t SettlementCapacityBonus = 0;
     std::string Skill;
 };
 }

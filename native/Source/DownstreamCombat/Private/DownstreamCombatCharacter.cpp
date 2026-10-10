@@ -1,4 +1,6 @@
 #include "DownstreamCombatCharacter.h"
+#include "DownstreamWaterSubsystem.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "DownstreamCombatAttributeSet.h"
 #include "DownstreamCombatRules.h"
 #include "DownstreamExpeditionSubsystem.h"
@@ -39,6 +41,16 @@ void ADownstreamCombatCharacter::Tick(float DeltaSeconds)
     {
         DamageFlashRemaining = FMath::Max(0.0f, DamageFlashRemaining - DeltaSeconds);
         SetFeedbackColor(FMath::Lerp(BaseFeedbackColor, FLinearColor(5.0f, 1.0f, 0.7f), DamageFlashRemaining / 0.15f));
+    }
+    // Standing water slows everyone the same way: player, enemies (and robots, separately).
+    if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+    {
+        if (WadeBaseSpeed <= 0.0f) WadeBaseSpeed = Movement->MaxWalkSpeed;
+        const auto* Water = UDownstreamWaterSubsystem::GetForWorld(this);
+        WaterDepth = Water ? Water->GetWaterDepthAt(GetActorLocation()) : 0.0f;
+        const float AtOneMetre = FMath::Clamp(GetTuning()->WadeSpeedAtOneMetre, 0.05f, 1.0f);
+        const float Multiplier = FMath::Max(0.25f, FMath::Lerp(1.0f, AtOneMetre, FMath::Clamp(WaterDepth, 0.0f, 1.5f)));
+        Movement->MaxWalkSpeed = WadeBaseSpeed * Multiplier;
     }
 }
 

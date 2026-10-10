@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "DownstreamCombatCharacter.h"
 #include "DownstreamCombatRules.h"
+#include "DownstreamSettlementTypes.h"
 #include "DownstreamPlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -25,6 +26,24 @@ public:
     UFUNCTION(BlueprintCallable, Category="Expedition") void Interact();
     UFUNCTION(BlueprintPure, Category="Combat") FVector GetAimLocation() const { return AimLocation; }
     UFUNCTION(BlueprintPure, Category="Combat") bool IsDodging() const { return bDodging; }
+    UFUNCTION(BlueprintCallable, Category="Settlement") void ToggleBuildMenu();
+    UFUNCTION(BlueprintCallable, Category="Settlement") void SelectStructure(EDownstreamStructureType Type);
+    UFUNCTION(BlueprintCallable, Category="Settlement") bool PlaceSelectedStructure();
+    UFUNCTION(BlueprintCallable, Category="Settlement") void CancelPlacement();
+    UFUNCTION(BlueprintCallable, Category="Settlement") void ConstructHauler();
+    UFUNCTION(BlueprintCallable, Category="Settlement") void ToggleHauling();
+    UFUNCTION(BlueprintPure, Category="Settlement") bool IsBuildMenuOpen() const { return bBuildMenuOpen; }
+    UFUNCTION(BlueprintPure, Category="Settlement") bool IsPlacementSelected() const { return bPlacementSelected; }
+    UFUNCTION(BlueprintCallable, Category="Earthworks") void ConstructDigger();
+    UFUNCTION(BlueprintCallable, Category="Earthworks") void ToggleDigPlanner();
+    UFUNCTION(BlueprintCallable, Category="Earthworks") void ClearDigQueue();
+    UFUNCTION(BlueprintPure, Category="Earthworks") bool IsDigPlannerOpen() const { return bDigPlannerOpen; }
+    UFUNCTION(BlueprintPure, Category="Earthworks") bool IsDraggingCanal() const { return bDraggingCanal; }
+    UFUNCTION(BlueprintPure, Category="Earthworks") FIntPoint GetCanalDragStart() const { return CanalDragStart; }
+    // Site cell under the mouse; false when the cursor is off the water site.
+    UFUNCTION(BlueprintPure, Category="Earthworks") bool GetCanalCursorCell(FIntPoint& Cell) const { Cell = CanalCursor; return bCanalCursorValid; }
+    // Test/automation entry points that bypass the mouse.
+    UFUNCTION(BlueprintCallable, Category="Earthworks") bool PlanCanal(FIntPoint From, FIntPoint To);
 
 protected:
     virtual void BeginPlay() override;
@@ -39,6 +58,11 @@ private:
     void StopFire();
     void ChooseCombatSkill();
     void ChooseSalvageSkill();
+    void ChooseCharger();
+    void UpdatePlacementPreview();
+    void UpdateCanalCursor();
+    void BeginCanalDrag();
+    void FinishCanalDrag();
     void UpdateAim();
     void EndDodge();
     FVector MovementDirection() const;
@@ -53,6 +77,15 @@ private:
     double DodgeEndTime = 0.0;
     bool bFiring = false;
     bool bDodging = false;
+    bool bBuildMenuOpen = false;
+    bool bPlacementSelected = false;
+    bool bDigPlannerOpen = false;
+    bool bDraggingCanal = false;
+    bool bCanalCursorValid = false;
+    FIntPoint CanalDragStart = FIntPoint::ZeroValue;
+    FIntPoint CanalCursor = FIntPoint::ZeroValue;
+    EDownstreamStructureType SelectedStructure = EDownstreamStructureType::Storage;
+    FVector PlacementLocation = FVector::ZeroVector;
     downstream::CombatCooldown RangedCooldown;
     downstream::CombatCooldown MeleeCooldown;
     downstream::CombatCooldown DodgeCooldown;

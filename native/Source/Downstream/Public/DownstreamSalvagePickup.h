@@ -24,6 +24,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Salvage") TObjectPtr<UPointLightComponent> SalvageGlow;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Downstream|Salvage") TObjectPtr<UTextRenderComponent> SalvageLabel;
 
+    UFUNCTION(BlueprintPure, Category = "Downstream|Expedition")
     bool IsClaimed() const { return bClaimed; }
     bool TryClaim();
     void ReleaseClaim();

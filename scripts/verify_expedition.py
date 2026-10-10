@@ -88,9 +88,9 @@ def tick(delta):
             travel=(pawn.get_actor_location()-state['move_start']).length()
             if travel>430:
                 state['report']['movement_cm']=travel
-                place(pawn,-100,-1100)
+                place(pawn,-900,-1100)
                 target=state['shooters'][0]
-                place(target,500,-1100)
+                place(target,-300,-1100)
                 state.update(target=target,target_health=target.get_health(),last_shot=0,shot_damage_seen=False)
                 stage('ranged')
         elif state['stage']=='ranged':
@@ -114,9 +114,9 @@ def tick(delta):
                 assert economy.try_interact(pawn),'Home extraction failed'
                 assert economy.get_carried_salvage()==0 and economy.get_banked_salvage()==2,'Extraction accounting incorrect'
                 state['report'].update(projectile_kill=True,enemy_drop=True,banked_salvage=2,starter_skill='steady_aim')
-                place(pawn,100,-1100)
+                place(pawn,-700,-1100)
                 melee=state['chasers'][0]
-                place(melee,200,-1100)
+                place(melee,-600,-1100)
                 pawn.set_actor_rotation(unreal.Rotator(pitch=0,yaw=0,roll=0),False)
                 state.update(melee=melee,melee_health=melee.get_health())
                 state['point_last_shot']=0
@@ -139,7 +139,7 @@ def tick(delta):
             state['report']['melee_damage']=state['melee_health']-target.get_health()
             place(target,2400,1900)
             chaser=state['chasers'][1]
-            place(chaser,650,-1100)
+            place(chaser,-150,-1100)
             freeze(chaser,False)
             state.update(ai_target=chaser,ai_start=chaser.get_actor_location(),health_start=pawn.get_health())
             stage('chaser')
@@ -152,7 +152,7 @@ def tick(delta):
                 freeze(chaser)
                 place(chaser,2500,1900)
                 shooter=state['shooters'][1]
-                place(shooter,700,-1100)
+                place(shooter,-100,-1100)
                 freeze(shooter,False)
                 state.update(ai_target=shooter,health_start=pawn.get_health())
                 stage('shooter')
@@ -168,7 +168,7 @@ def tick(delta):
                 pawn.interact()
                 assert pawn.get_health()==pawn.get_max_health(),'Home interaction did not heal'
                 state['report'].update(home_protection=True,home_heal=True)
-                place(pawn,100,-1100)
+                place(pawn,-700,-1100)
                 pickup=economy.spawn_salvage(pawn.get_actor_location(),2,False)
                 assert pickup and economy.try_interact(pawn),'Could not stage carried salvage'
                 pawn.receive_combat_damage(500,shooter)
@@ -187,7 +187,7 @@ def tick(delta):
                 assert economy.try_interact(pawn),'Recovery collection failed'
                 assert economy.get_carried_salvage()==2,'Recovery amount incorrect'
                 state['report'].update(death_respawn=True,recovery_bag=True,recovered_salvage=2)
-                place(pawn,100,-1100)
+                place(pawn,-700,-1100)
                 state.update(dodge_start=pawn.get_actor_location(),dodge_health=pawn.get_health())
                 pawn.dodge()
                 assert pawn.is_dodging(),'Dodge never activated'
